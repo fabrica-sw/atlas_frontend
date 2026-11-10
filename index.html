@@ -8363,6 +8363,38 @@ stroke-linecap="round" stroke-linejoin="round">
 
 </div>
 
+<!-- SISTEMAS BACKUP (SUPLENCIA) -->
+
+<div class="sidebar-section sidebar-sistemas-header" id="sidebar-sistemas-backup-header" style="display:none;" onclick="toggleSidebarSistemas('backup')">
+
+<div class="sidebar-sistemas-header-title">
+
+<span class="sidebar-sistemas-header-text">Sistemas Backup</span>
+
+<span class="badge-tag-sm sidebar-sys-count-badge" id="sidebar-sys-backup-count">0</span>
+
+</div>
+
+<span id="sis-backup-toggle-icon" class="sis-toggle-icon">▼</span>
+
+</div>
+
+<div id="sidebar-sistemas-backup-wrap" class="sidebar-sistemas-wrap" style="display:none;">
+
+<div class="sidebar-sys-search-wrap">
+
+<input type="text" id="sidebar-sys-backup-search" class="sidebar-sys-search-input" placeholder="Filtrar Backup..." oninput="filterSidebarSistemas('backup')">
+
+</div>
+
+<div id="sidebar-sistemas-backup" class="sidebar-sistemas-list">
+
+<!-- Construido dinámicamente por buildUserSidebar() -->
+
+</div>
+
+</div>
+
 <!-- Menú Dirección omitido -->
 
 <div class="sidebar-section" id="nav-admin-section">Administración</div>
@@ -12552,10 +12584,19 @@ function isRfcOfCurrentUser(r) {
     const rSys = String(r.sistema_name || r.sistema || r.sistema_sap || r._sheet || '').toLowerCase().trim();
     if (rSys && userSys.some(s => rSys === s || rSys.includes(s) || s.includes(rSys))) {
       // Protección de Titularidad: Si el RFC ya pertenece explícitamente a otro TQS Leader (owner_id distinto),
-      // NO apropiarlo en el perfil personal, preservando la cuota exacta de titularidad individual.
-      if (r.owner_id && uid && r.owner_id !== uid) {
+      // NO apropiarlo en el perfil personal a menos que el modo Backup esté activo
+      if (!window._misSistemasBackupActive && r.owner_id && uid && r.owner_id !== uid) {
         return false;
       }
+      return true;
+    }
+  }
+
+  // 5. Coincidencia por sistemas de Backup cuando el operador activa Mis Sistemas & Backup
+  if (window._misSistemasBackupActive && Array.isArray(CURRENT_USER.sistemas_backup) && CURRENT_USER.sistemas_backup.length > 0) {
+    const backupSys = CURRENT_USER.sistemas_backup.map(s => String(s || '').toLowerCase().trim()).filter(Boolean);
+    const rSys = String(r.sistema_name || r.sistema || r.sistema_sap || r._sheet || '').toLowerCase().trim();
+    if (rSys && backupSys.some(s => rSys === s || rSys.includes(s) || s.includes(rSys))) {
       return true;
     }
   }
@@ -12585,11 +12626,20 @@ function isSolOfCurrentUser(s) {
     const sSys = String(s.sistema || s.sistema_sap || '').toLowerCase().trim();
     const arrSys = Array.isArray(s.sistemas) ? s.sistemas.map(x => String(x || '').toLowerCase().trim()) : [];
     if (sSys && userSys.some(u => sSys === u || sSys.includes(u) || u.includes(sSys))) {
-      if (s.responsable_id && uid && s.responsable_id !== uid) return false;
+      if (!window._misSistemasBackupActive && s.responsable_id && uid && s.responsable_id !== uid) return false;
       return true;
     }
     if (arrSys.some(x => userSys.some(u => x === u || x.includes(u) || u.includes(x)))) {
-      if (s.responsable_id && uid && s.responsable_id !== uid) return false;
+      if (!window._misSistemasBackupActive && s.responsable_id && uid && s.responsable_id !== uid) return false;
+      return true;
+    }
+  }
+  if (window._misSistemasBackupActive && Array.isArray(CURRENT_USER.sistemas_backup) && CURRENT_USER.sistemas_backup.length > 0) {
+    const backupSys = CURRENT_USER.sistemas_backup.map(x => String(x || '').toLowerCase().trim()).filter(Boolean);
+    const sSys = String(s.sistema || s.sistema_sap || '').toLowerCase().trim();
+    const arrSys = Array.isArray(s.sistemas) ? s.sistemas.map(x => String(x || '').toLowerCase().trim()) : [];
+    if ((sSys && backupSys.some(u => sSys === u || sSys.includes(u) || u.includes(sSys))) ||
+        arrSys.some(x => backupSys.some(u => x === u || x.includes(u) || u.includes(x)))) {
       return true;
     }
   }
@@ -12892,19 +12942,30 @@ function getSheet(name) {
       const userSys = Array.isArray(CURRENT_USER.sistemas) ? CURRENT_USER.sistemas.map(s => s.toLowerCase().trim()) : [];
       const uid = CURRENT_USER.id;
       const uName = (CURRENT_USER.nombre || '').toLowerCase().trim();
+      const backupSys = (window._misSistemasBackupActive && Array.isArray(CURRENT_USER.sistemas_backup))
+        ? CURRENT_USER.sistemas_backup.map(s => s.toLowerCase().trim())
+        : [];
       return getAll().filter(r => {
         const rSys = (r.sistema_name || r.sistema || r._sheet || '').toLowerCase().trim();
         const isSys = userSys.some(s => rSys === s || rSys.includes(s) || s.includes(rSys));
+        const isBackupSys = backupSys.length > 0 && backupSys.some(s => rSys === s || rSys.includes(s) || s.includes(rSys));
         const isOwner = r.owner_id === uid;
         const isTqs = Array.isArray(r.tqs_ids) && r.tqs_ids.includes(uid);
         const isPromoter = (r.promotor || '').toLowerCase().includes(uName);
-        return isSys || isOwner || isTqs || isPromoter;
+        return isSys || isBackupSys || isOwner || isTqs || isPromoter;
       });
     }
     return getAll();
   }
 
-  return getAll().filter(r => {
+  // Si el usuario selecciono explicitamente uno de sus sistemas de Backup, consultar getAllRaw() sin restriccion de owner_id
+  const backupSysArr = (typeof CURRENT_USER !== 'undefined' && CURRENT_USER && Array.isArray(CURRENT_USER.sistemas_backup))
+    ? CURRENT_USER.sistemas_backup.map(s => normSys(s))
+    : [];
+  const isViewingBackupSystem = backupSysArr.some(b => b === targetNorm || b.startsWith(targetNorm) || targetNorm.startsWith(b));
+  const sourceRecords = isViewingBackupSystem ? getAllRaw() : getAll();
+
+  return sourceRecords.filter(r => {
     let sysList = [];
     if (r.sistema_name) sysList.push(r.sistema_name);
     if (r.sistema) sysList.push(r.sistema);
@@ -17239,8 +17300,9 @@ function openBatchStatusModal(singleTicket, singleId, preselectedStatus) {
   if (targetSelect) {
     let anyExecuting = false;
     for (const t of ticketsArr) {
-      const rec = (Array.isArray(SB_RECORDS) ? SB_RECORDS.find(r => r.ticket === t) : null) ||
-                  (Array.isArray(GS_RECORDS) ? GS_RECORDS.find(r => r.ticket === t) : null);
+      const targetId = window._selectedBatchIds?.get(t);
+      const rec = (Array.isArray(SB_RECORDS) ? SB_RECORDS.find(r => (targetId && (r._id === targetId || r.id === targetId)) || r.ticket === t) : null) ||
+                  (Array.isArray(GS_RECORDS) ? GS_RECORDS.find(r => (targetId && (r._id === targetId || r.id === targetId)) || r.ticket === t) : null);
       if (rec) {
         const curSt = (rec.status || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         if (curSt.includes('ejecu') || curSt.includes('curs') || curSt.includes('proceso')) {
@@ -17317,8 +17379,8 @@ async function executeBatchStatusChange() {
   if (targetNorm.includes('reprogram')) {
     for (const ticket of ticketsArr) {
       const id = window._selectedBatchIds.get(ticket);
-      const rec = (Array.isArray(SB_RECORDS) ? SB_RECORDS.find(r => r.ticket === ticket || r._id === id) : null) ||
-                  (Array.isArray(GS_RECORDS) ? GS_RECORDS.find(r => r.ticket === ticket) : null);
+      const rec = (Array.isArray(SB_RECORDS) ? SB_RECORDS.find(r => (id && (r._id === id || r.id === id)) || (!id && r.ticket === ticket)) : null) ||
+                  (Array.isArray(GS_RECORDS) ? GS_RECORDS.find(r => (id && (r._id === id || r.id === id)) || (!id && r.ticket === ticket)) : null);
       if (rec) {
         const curSt = (rec.status || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         if (curSt.includes('ejecu') || curSt.includes('curs') || curSt.includes('proceso')) {
@@ -17338,8 +17400,8 @@ async function executeBatchStatusChange() {
 
   for (const ticket of ticketsArr) {
     const id = window._selectedBatchIds.get(ticket);
-    const rec = (Array.isArray(SB_RECORDS) ? SB_RECORDS.find(r => r.ticket === ticket || r._id === id) : null) ||
-                (Array.isArray(GS_RECORDS) ? GS_RECORDS.find(r => r.ticket === ticket) : null);
+    const rec = (Array.isArray(SB_RECORDS) ? SB_RECORDS.find(r => (id && (r._id === id || r.id === id)) || (!id && r.ticket === ticket)) : null) ||
+                (Array.isArray(GS_RECORDS) ? GS_RECORDS.find(r => (id && (r._id === id || r.id === id)) || (!id && r.ticket === ticket)) : null);
 
     if (rec) {
       rec.status = newStatus;
@@ -18705,9 +18767,11 @@ const candidateSystems = [];
 if (r.sistema) candidateSystems.push(...String(r.sistema).split(',').map(s => s.trim()));
 if (r.sistema_name) candidateSystems.push(...String(r.sistema_name).split(',').map(s => s.trim()));
 if (r.sistema_grupo) candidateSystems.push(...String(r.sistema_grupo).split(',').map(s => s.trim()));
-if (r.sid) candidateSystems.push(...String(r.sid).split(',').map(s => s.trim()));
 if (r._sheet) candidateSystems.push(...String(r._sheet).split(',').map(s => s.trim()));
 if (Array.isArray(r.sistemas)) candidateSystems.push(...r.sistemas.map(s => String(s).trim()));
+if (candidateSystems.filter(Boolean).length === 0 && r.sid) {
+  candidateSystems.push(...String(r.sid).split(',').map(s => s.trim()));
+}
 const lowerCandidates = candidateSystems.map(normCleanStr).filter(Boolean);
 
 const sysCheckboxes = document.querySelectorAll('#rfc-sistemas-container input[name="rfc-sistema-cb"]');
@@ -19381,7 +19445,7 @@ function updateFormHeuristicEval() {
 
     });
 
-    function saveRecord() {
+    async function saveRecord() {
 
 const tipo = document.getElementById('f-tipo').value;
 
@@ -19411,17 +19475,21 @@ return;
 
 }
 
-// ── Validación anti-duplicados por Ticket ──
+// ── Validación anti-duplicados por Ticket + Sistema + Fecha ──
 
 const ticketUpper = ticket.toUpperCase().trim();
+const targetSysNorm = (grupo || '').toLowerCase().trim();
+const targetDateClean = (fecha || '').split('T')[0];
 
-const duplicate = getAll().find(rec =>
-
-(rec.ticket || '').toUpperCase().trim() === ticketUpper &&
-
-(!window._editingRecord || (rec._id !== window._editingRecord._id && (rec.ticket || '').toUpperCase().trim() !== (window._editingRecord.ticket || '').toUpperCase().trim()))
-
-);
+const duplicate = getAllRaw().find(rec => {
+  const recTicket = (rec.ticket || '').toUpperCase().trim();
+  if (recTicket !== ticketUpper) return false;
+  if (!window._editingRecord) return true;
+  if (rec._id === window._editingRecord._id) return false;
+  const recSys = (rec.sistema_name || rec.sistema || rec._sheet || '').toLowerCase().trim();
+  const recDate = (rec.fecha || '').split('T')[0];
+  return recSys === targetSysNorm && recDate === targetDateClean;
+});
 
 if (duplicate) {
   const dupSheet = duplicate._sheet || duplicate.sistema || '—';
@@ -19501,8 +19569,18 @@ if (window._editingRecord) {
 
 const orig = window._editingRecord;
 
-// Actualizar en memoria
+if (orig._id) {
+  const cleanRow = recordToSbRow(record);
+  try {
+    await sbRequest('PATCH', `rfcs?id=eq.${orig._id}`, cleanRow);
+  } catch (e) {
+    if (typeof logError === 'function') logError('PATCH RFC', e.message, 'Ticket: ' + ticket);
+    showToast('Error al guardar en PostgreSQL: ' + e.message, 'error');
+    return;
+  }
+}
 
+// Actualizar en memoria solo tras confirmar persistencia en BD
 const cleanF = (orig.fecha || '').split('T')[0];
 const origTicket = (orig.ticket || '').toUpperCase().trim();
 const updateInArray = (arr) => {
@@ -19520,13 +19598,10 @@ const updateInArray = (arr) => {
 };
 
 updateInArray(SB_RECORDS);
-
 updateInArray(GS_RECORDS);
 
 applyFilters();
-
 updateAlertBadge();
-
 renderDashboard();
 if (typeof renderAlertsPage === 'function') renderAlertsPage();
 if (typeof showAlertModal === 'function' && document.getElementById('modal-alerts')?.classList.contains('open')) showAlertModal();
@@ -19537,34 +19612,10 @@ if (typeof renderVoboPage === 'function') renderVoboPage();
 if (typeof renderCanceladosPage === 'function') renderCanceladosPage();
 if (typeof renderTable === 'function') renderTable();
 
-if (orig._id) {
-
-// CRITICO: limpiar campos UI (_local, _sheet, _id, horaInicio, horaFin)
-
-// usando recordToSbRow antes de mandar a PostgreSQL API
-
-const cleanRow = recordToSbRow(record);
-
-sbRequest('PATCH', `rfcs?id=eq.${orig._id}`, cleanRow)
-
-.then(() => showToast('RFC actualizado en PostgreSQL API: ' + ticket, 'success'))
-
-.catch(e => {
-
-if (typeof logError === 'function') logError('PATCH RFC', e.message, 'Ticket: ' + ticket);
-
-showToast('Error PostgreSQL API: ' + e.message, 'error');
-
-});
-
-}
-
-showToast('RFC actualizado: ' + ticket, 'success');
+showToast('RFC actualizado en PostgreSQL: ' + ticket, 'success');
 
 cancelEdit();
-
 navigate('sheet');
-
 return;
 
 }
@@ -22347,9 +22398,13 @@ return false;
 
 function toggleSidebarSistemas(group = 'sap') {
 
-const wrapId = group === 'nosap' ? 'sidebar-sistemas-nosap-wrap' : 'sidebar-sistemas-wrap';
+const wrapId = group === 'nosap'
+  ? 'sidebar-sistemas-nosap-wrap'
+  : (group === 'backup' ? 'sidebar-sistemas-backup-wrap' : 'sidebar-sistemas-wrap');
 
-const iconId = group === 'nosap' ? 'sis-nosap-toggle-icon' : 'sis-toggle-icon';
+const iconId = group === 'nosap'
+  ? 'sis-nosap-toggle-icon'
+  : (group === 'backup' ? 'sis-backup-toggle-icon' : 'sis-toggle-icon');
 
 const wrap = document.getElementById(wrapId);
 
@@ -22367,9 +22422,13 @@ if (icon) icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
 
 function filterSidebarSistemas(group = 'sap') {
 
-const searchId = group === 'nosap' ? 'sidebar-sys-nosap-search' : 'sidebar-sys-search';
+const searchId = group === 'nosap'
+  ? 'sidebar-sys-nosap-search'
+  : (group === 'backup' ? 'sidebar-sys-backup-search' : 'sidebar-sys-search');
 
-const listId = group === 'nosap' ? '#sidebar-sistemas-nosap .nav-item' : '#sidebar-sistemas-sap .nav-item, #sidebar-sistemas .nav-item';
+const listId = group === 'nosap'
+  ? '#sidebar-sistemas-nosap .nav-item'
+  : (group === 'backup' ? '#sidebar-sistemas-backup .nav-item' : '#sidebar-sistemas-sap .nav-item, #sidebar-sistemas .nav-item');
 
 const q = (document.getElementById(searchId)?.value || '').toLowerCase().trim();
 
@@ -22594,6 +22653,36 @@ return `<div class="nav-item" onclick="navigate('sheet','${jsAttrString(s)}')" i
 
 }).join('');
 
+}
+
+// Poblar seccion dedicada de Sistemas Backup (Suplencia) para lideres TQS
+const isAdminOrDir = user && ['admin', 'director', 'guardia'].includes(user.rol);
+const backupHeader = document.getElementById('sidebar-sistemas-backup-header');
+const backupWrap = document.getElementById('sidebar-sistemas-backup-wrap');
+const backupBadge = document.getElementById('sidebar-sys-backup-count');
+const containerBackup = document.getElementById('sidebar-sistemas-backup');
+const ownedNormSet = new Set((userSistemas || []).map(x => String(x || '').toLowerCase().trim()));
+const backupSystems = !isAdminOrDir && Array.isArray(user?.sistemas_backup)
+  ? Array.from(new Set(user.sistemas_backup.map(x => String(x || '').trim()).filter(x => x && !ownedNormSet.has(x.toLowerCase())))).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }))
+  : [];
+
+if (backupHeader && backupWrap && containerBackup) {
+  if (backupSystems.length > 0) {
+    backupHeader.style.display = 'flex';
+    backupWrap.style.display = 'block';
+    if (backupBadge) backupBadge.textContent = backupSystems.length;
+    containerBackup.innerHTML = backupSystems.map(s => {
+      const sysId = 'nav-backup-' + String(s).replace(/[^a-zA-Z0-9_-]/g, '_');
+      return `<div class="nav-item" onclick="navigate('sheet','${jsAttrString(s)}')" id="${sysId}" title="Sistema asignado como Backup">
+        <span class="sys-dot" style="background:#d97706"></span><span>${escapeHtml(s)}</span>
+      </div>`;
+    }).join('');
+  } else {
+    backupHeader.style.display = 'none';
+    backupWrap.style.display = 'none';
+    if (backupBadge) backupBadge.textContent = '0';
+    containerBackup.innerHTML = '';
+  }
 }
 
 } catch (errSidebar) {
@@ -31089,7 +31178,7 @@ async function loadUserBackupRfcs() {
     if (!window._misSistemasBackupActive) {
       if (window._customSheetData) delete window._customSheetData['Mis Sistemas & Backup'];
       // Restaurar todos los sistemas en el sidebar
-      document.querySelectorAll('#sidebar-sistemas-sap .nav-item, #sidebar-sistemas-nosap .nav-item').forEach(el => {
+      document.querySelectorAll('#sidebar-sistemas-sap .nav-item, #sidebar-sistemas-nosap .nav-item, #sidebar-sistemas-backup .nav-item').forEach(el => {
         el.style.display = 'flex';
       });
       if (btn) {
@@ -31097,7 +31186,14 @@ async function loadUserBackupRfcs() {
         btn.classList.add('btn-secondary');
         btn.innerHTML = 'Mis Sistemas & Backup';
       }
-      if (typeof showToast === 'function') showToast('Mostrando todos los sistemas nuevamente', 'info');
+      if (typeof applyFilters === 'function') applyFilters();
+      if (typeof updateAlertBadge === 'function') updateAlertBadge();
+      if (typeof renderDashboard === 'function') renderDashboard();
+      if (typeof renderVoboPage === 'function') renderVoboPage();
+      if (typeof renderAprobadosPage === 'function') renderAprobadosPage();
+      if (typeof renderEjecucionPage === 'function') renderEjecucionPage();
+      if (typeof renderAlertsPage === 'function') renderAlertsPage();
+      if (typeof showToast === 'function') showToast('Modo aislado restaurado (Solo Titularidad)', 'info');
       navigate('dashboard');
       return;
     }
@@ -31133,6 +31229,12 @@ async function loadUserBackupRfcs() {
       }
 
       if (typeof renderTable === 'function') renderTable();
+      if (typeof updateAlertBadge === 'function') updateAlertBadge();
+      if (typeof renderDashboard === 'function') renderDashboard();
+      if (typeof renderVoboPage === 'function') renderVoboPage();
+      if (typeof renderAprobadosPage === 'function') renderAprobadosPage();
+      if (typeof renderEjecucionPage === 'function') renderEjecucionPage();
+      if (typeof renderAlertsPage === 'function') renderAlertsPage();
 
       if (typeof showToast === 'function') {
         showToast(`Mis Sistemas & Backup activo (${records.length} RFCs)`, 'success');
