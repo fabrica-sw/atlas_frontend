@@ -12582,7 +12582,9 @@ function isRfcOfCurrentUser(r) {
   // 4. Coincidencia por sistemas asignados al perfil del usuario
   if (userSys.length > 0) {
     const rSys = String(r.sistema_name || r.sistema || r.sistema_sap || r._sheet || '').toLowerCase().trim();
-    if (rSys && userSys.some(s => rSys === s || rSys.includes(s) || s.includes(rSys))) {
+    const rGrp = String(r.sistema_grupo || r.grupo || '').toLowerCase().trim();
+    const matchSysOrGrp = s => (rSys && (rSys === s || rSys.includes(s) || s.includes(rSys))) || (rGrp && (rGrp === s || rGrp.includes(s) || s.includes(rGrp)));
+    if (userSys.some(matchSysOrGrp)) {
       // Protección de Titularidad: Si el RFC ya pertenece explícitamente a otro TQS Leader (owner_id distinto),
       // NO apropiarlo en el perfil personal a menos que el modo Backup esté activo
       if (!window._misSistemasBackupActive && r.owner_id && uid && r.owner_id !== uid) {
@@ -12596,7 +12598,8 @@ function isRfcOfCurrentUser(r) {
   if (window._misSistemasBackupActive && Array.isArray(CURRENT_USER.sistemas_backup) && CURRENT_USER.sistemas_backup.length > 0) {
     const backupSys = CURRENT_USER.sistemas_backup.map(s => String(s || '').toLowerCase().trim()).filter(Boolean);
     const rSys = String(r.sistema_name || r.sistema || r.sistema_sap || r._sheet || '').toLowerCase().trim();
-    if (rSys && backupSys.some(s => rSys === s || rSys.includes(s) || s.includes(rSys))) {
+    const rGrp = String(r.sistema_grupo || r.grupo || '').toLowerCase().trim();
+    if (backupSys.some(s => (rSys && (rSys === s || rSys.includes(s) || s.includes(rSys))) || (rGrp && (rGrp === s || rGrp.includes(s) || s.includes(rGrp))))) {
       return true;
     }
   }
@@ -12947,8 +12950,9 @@ function getSheet(name) {
         : [];
       return getAll().filter(r => {
         const rSys = (r.sistema_name || r.sistema || r._sheet || '').toLowerCase().trim();
-        const isSys = userSys.some(s => rSys === s || rSys.includes(s) || s.includes(rSys));
-        const isBackupSys = backupSys.length > 0 && backupSys.some(s => rSys === s || rSys.includes(s) || s.includes(rSys));
+        const rGrp = (r.sistema_grupo || r.grupo || '').toLowerCase().trim();
+        const isSys = userSys.some(s => (rSys && (rSys === s || rSys.includes(s) || s.includes(rSys))) || (rGrp && (rGrp === s || rGrp.includes(s) || s.includes(rGrp))));
+        const isBackupSys = backupSys.length > 0 && backupSys.some(s => (rSys && (rSys === s || rSys.includes(s) || s.includes(rSys))) || (rGrp && (rGrp === s || rGrp.includes(s) || s.includes(rGrp))));
         const isOwner = r.owner_id === uid;
         const isTqs = Array.isArray(r.tqs_ids) && r.tqs_ids.includes(uid);
         const isPromoter = (r.promotor || '').toLowerCase().includes(uName);
@@ -18978,12 +18982,15 @@ if (hfrM) setVal('f-hfin-ret-m', hfrM);
 // Checkboxes TQS asignados
 if (typeof loadTQSCheckboxes === 'function') {
   var tqsArr = [];
-  if (Array.isArray(r.tqs_ids)) {
+  if (Array.isArray(r.tqs_ids) && r.tqs_ids.length > 0) {
     tqsArr = r.tqs_ids;
-  } else if (Array.isArray(r.tqs_asignados)) {
+  } else if (Array.isArray(r.tqs_asignados) && r.tqs_asignados.length > 0) {
     tqsArr = r.tqs_asignados;
-  } else if (typeof r.tqs_asignados === 'string') {
+  } else if (typeof r.tqs_asignados === 'string' && r.tqs_asignados.trim()) {
     tqsArr = r.tqs_asignados.split(',').map(function(s) { return s.trim(); });
+  }
+  if (tqsArr.length === 0 && r.owner_id) {
+    tqsArr = [r.owner_id];
   }
   loadTQSCheckboxes(tqsArr);
 }
