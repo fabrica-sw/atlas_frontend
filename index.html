@@ -12594,13 +12594,20 @@ function isRfcOfCurrentUser(r) {
     }
   }
 
-  // 5. Coincidencia por sistemas de Backup cuando el operador activa Mis Sistemas & Backup
-  if (window._misSistemasBackupActive && Array.isArray(CURRENT_USER.sistemas_backup) && CURRENT_USER.sistemas_backup.length > 0) {
-    const backupSys = CURRENT_USER.sistemas_backup.map(s => String(s || '').toLowerCase().trim()).filter(Boolean);
-    const rSys = String(r.sistema_name || r.sistema || r.sistema_sap || r._sheet || '').toLowerCase().trim();
-    const rGrp = String(r.sistema_grupo || r.grupo || '').toLowerCase().trim();
-    if (backupSys.some(s => (rSys && (rSys === s || rSys.includes(s) || s.includes(rSys))) || (rGrp && (rGrp === s || rGrp.includes(s) || s.includes(rGrp))))) {
-      return true;
+  // 5. Coincidencia por sistemas de Backup o titular respaldado cuando el operador activa Mis Sistemas & Backup
+  if (window._misSistemasBackupActive) {
+    const backupTitularIds = Array.isArray(CURRENT_USER.backup_titular_ids) ? CURRENT_USER.backup_titular_ids : [];
+    if (backupTitularIds.length > 0) {
+      if (r.owner_id && backupTitularIds.includes(r.owner_id)) return true;
+      if (Array.isArray(r.tqs_ids) && r.tqs_ids.some(id => backupTitularIds.includes(id))) return true;
+    }
+    if (Array.isArray(CURRENT_USER.sistemas_backup) && CURRENT_USER.sistemas_backup.length > 0) {
+      const backupSys = CURRENT_USER.sistemas_backup.map(s => String(s || '').toLowerCase().trim()).filter(Boolean);
+      const rSys = String(r.sistema_name || r.sistema || r.sistema_sap || r._sheet || '').toLowerCase().trim();
+      const rGrp = String(r.sistema_grupo || r.grupo || '').toLowerCase().trim();
+      if (backupSys.some(s => (rSys && (rSys === s || rSys.includes(s) || s.includes(rSys))) || (rGrp && (rGrp === s || rGrp.includes(s) || s.includes(rGrp))))) {
+        return true;
+      }
     }
   }
 
@@ -12637,13 +12644,19 @@ function isSolOfCurrentUser(s) {
       return true;
     }
   }
-  if (window._misSistemasBackupActive && Array.isArray(CURRENT_USER.sistemas_backup) && CURRENT_USER.sistemas_backup.length > 0) {
-    const backupSys = CURRENT_USER.sistemas_backup.map(x => String(x || '').toLowerCase().trim()).filter(Boolean);
-    const sSys = String(s.sistema || s.sistema_sap || '').toLowerCase().trim();
-    const arrSys = Array.isArray(s.sistemas) ? s.sistemas.map(x => String(x || '').toLowerCase().trim()) : [];
-    if ((sSys && backupSys.some(u => sSys === u || sSys.includes(u) || u.includes(sSys))) ||
-        arrSys.some(x => backupSys.some(u => x === u || x.includes(u) || u.includes(x)))) {
+  if (window._misSistemasBackupActive) {
+    const backupTitularIds = Array.isArray(CURRENT_USER.backup_titular_ids) ? CURRENT_USER.backup_titular_ids : [];
+    if (backupTitularIds.length > 0 && s.responsable_id && backupTitularIds.includes(s.responsable_id)) {
       return true;
+    }
+    if (Array.isArray(CURRENT_USER.sistemas_backup) && CURRENT_USER.sistemas_backup.length > 0) {
+      const backupSys = CURRENT_USER.sistemas_backup.map(x => String(x || '').toLowerCase().trim()).filter(Boolean);
+      const sSys = String(s.sistema || s.sistema_sap || '').toLowerCase().trim();
+      const arrSys = Array.isArray(s.sistemas) ? s.sistemas.map(x => String(x || '').toLowerCase().trim()) : [];
+      if ((sSys && backupSys.some(u => sSys === u || sSys.includes(u) || u.includes(sSys))) ||
+          arrSys.some(x => backupSys.some(u => x === u || x.includes(u) || u.includes(x)))) {
+        return true;
+      }
     }
   }
   return false;
@@ -12948,15 +12961,19 @@ function getSheet(name) {
       const backupSys = (window._misSistemasBackupActive && Array.isArray(CURRENT_USER.sistemas_backup))
         ? CURRENT_USER.sistemas_backup.map(s => s.toLowerCase().trim())
         : [];
+      const backupTitularIds = (window._misSistemasBackupActive && Array.isArray(CURRENT_USER.backup_titular_ids))
+        ? CURRENT_USER.backup_titular_ids
+        : [];
       return getAll().filter(r => {
         const rSys = (r.sistema_name || r.sistema || r._sheet || '').toLowerCase().trim();
         const rGrp = (r.sistema_grupo || r.grupo || '').toLowerCase().trim();
         const isSys = userSys.some(s => (rSys && (rSys === s || rSys.includes(s) || s.includes(rSys))) || (rGrp && (rGrp === s || rGrp.includes(s) || s.includes(rGrp))));
         const isBackupSys = backupSys.length > 0 && backupSys.some(s => (rSys && (rSys === s || rSys.includes(s) || s.includes(rSys))) || (rGrp && (rGrp === s || rGrp.includes(s) || s.includes(rGrp))));
+        const isBackupTitular = backupTitularIds.length > 0 && ((r.owner_id && backupTitularIds.includes(r.owner_id)) || (Array.isArray(r.tqs_ids) && r.tqs_ids.some(id => backupTitularIds.includes(id))));
         const isOwner = r.owner_id === uid;
         const isTqs = Array.isArray(r.tqs_ids) && r.tqs_ids.includes(uid);
         const isPromoter = (r.promotor || '').toLowerCase().includes(uName);
-        return isSys || isBackupSys || isOwner || isTqs || isPromoter;
+        return isSys || isBackupSys || isBackupTitular || isOwner || isTqs || isPromoter;
       });
     }
     return getAll();
@@ -22505,9 +22522,61 @@ sistemasSet.add(normalizeSapSystemName(s.nombre.trim()));
 }
 
 // Almacenar sistemas de backup en propiedad independiente para contingencias sin contaminar titularidad
+const backupSet = new Set();
 const backupSys = await sbRequest('GET', `sistemas?backup_id=eq.${user.id}&select=nombre`);
 if (Array.isArray(backupSys)) {
-  user.sistemas_backup = backupSys.map(s => normalizeSapSystemName(s.nombre || '')).filter(Boolean);
+  backupSys.forEach(s => {
+    const clean = normalizeSapSystemName(String(s.nombre || '').trim());
+    if (clean) backupSet.add(clean);
+  });
+}
+
+// Heredar todos los sistemas individuales de los titulares TQS cuyo backup asignado es el usuario actual
+const backedTitulars = await sbRequest('GET', `tqs_users?backup_tqs_id=eq.${user.id}&select=id,nombre,sistemas`);
+const backupTitularIds = [];
+if (Array.isArray(backedTitulars) && backedTitulars.length > 0) {
+  backedTitulars.forEach(t => {
+    if (t.id) backupTitularIds.push(t.id);
+    if (Array.isArray(t.sistemas)) {
+      t.sistemas.forEach(sys => {
+        const clean = normalizeSapSystemName(String(sys || '').trim());
+        if (clean) backupSet.add(clean);
+      });
+    }
+  });
+  if (backupTitularIds.length > 0) {
+    const titularIdsStr = backupTitularIds.join(',');
+    const titularOwnedSys = await sbRequest('GET', `sistemas?owner_id=in.(${titularIdsStr})&select=nombre`);
+    if (Array.isArray(titularOwnedSys)) {
+      titularOwnedSys.forEach(s => {
+        const clean = normalizeSapSystemName(String(s.nombre || '').trim());
+        if (clean) backupSet.add(clean);
+      });
+    }
+  }
+}
+
+// Incorporar sistemas individuales de RFCs activos en memoria donde el titular respaldado es owner o TQS asignado
+if (backupTitularIds.length > 0 && typeof SB_RECORDS !== 'undefined' && Array.isArray(SB_RECORDS)) {
+  SB_RECORDS.forEach(r => {
+    if (!r || r.deleted_at) return;
+    const isTitularRfc = (r.owner_id && backupTitularIds.includes(r.owner_id)) ||
+      (Array.isArray(r.tqs_ids) && r.tqs_ids.some(id => backupTitularIds.includes(id)));
+    if (isTitularRfc) {
+      const rSysRaw = String(r.sistema_name || r.sistema || '').trim();
+      const clean = normalizeSapSystemName(rSysRaw);
+      if (clean && !['general', 'sin definir', 'n/a', 'todos'].includes(clean.toLowerCase())) {
+        backupSet.add(clean);
+      }
+    }
+  });
+}
+
+user.backup_titular_ids = backupTitularIds;
+user.sistemas_backup = Array.from(backupSet).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+if (typeof CURRENT_USER !== 'undefined' && CURRENT_USER && CURRENT_USER.id === user.id) {
+  CURRENT_USER.backup_titular_ids = user.backup_titular_ids;
+  CURRENT_USER.sistemas_backup = user.sistemas_backup;
 }
 
 } catch (errOwned) {
