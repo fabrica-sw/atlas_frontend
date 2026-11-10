@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-11-09T23:00:00.000Z" agent="ATLAS Solutions Architecture" version="22.0.0" type="device">
+  <diagram id="atlas_architecture_diagram" name="ATLAS Platform - Arquitectura Desacoplada">
+    <mxGraphModel dx="1422" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="900" background="#ffffff">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- TITULO PRINCIPAL Y METADATOS -->
+        <mxCell id="title_banner" value="ATLAS Platform v3.0 — Arquitectura de Solución Desacoplada (Frontend &amp; Backend)&#xa;EAS Consulting Group · Coca-Cola FEMSA Operaciones SAP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f2b5c;strokeColor=#0f2b5c;fontColor=#ffffff;fontStyle=1;fontSize=14;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1220" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- BADGES GITHUB REPOSITORIOS -->
+        <mxCell id="repo_frontend_badge" value="Frontend Repo: https://github.com/eaguilarh/atlas-frontend.git (Nginx + SPA)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f9ff;strokeColor=#0284c7;fontColor=#0369a1;fontStyle=1;fontSize=10;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="78" width="590" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="repo_backend_badge" value="Backend Repo: https://github.com/eaguilarh/atlas-backend.git (Node.js 20 LTS + PostgreSQL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#16a34a;fontColor=#166534;fontStyle=1;fontSize=10;align=center;" vertex="1" parent="1">
+          <mxGeometry x="670" y="78" width="590" height="26" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- CAPA 1: CLIENTES / NAVEGADORES (ROLES) -->
+        <!-- ========================================== -->
+        <mxCell id="box_clients" value="CAPA 1: CLIENTES Y NAVEGADORES (ROLES DE USUARIO ATLAS)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#94a3b8;fontColor=#0f2b5c;fontStyle=1;fontSize=11;startSize=26;" vertex="1" parent="1">
+          <mxGeometry x="40" y="115" width="1220" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="role_admin" value="Rol: Administrador&#xa;• Gobernanza total (1,684 RFCs)&#xa;• Catalogo 54 Sistemas KOF&#xa;• Usuarios, Roles y Auditoria 360°" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0f2b5c;fontColor=#1e293b;fontSize=9;fontStyle=0;align=left;spacingLeft=8;" vertex="1" parent="box_clients">
+          <mxGeometry x="20" y="35" width="260" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="role_tqs" value="Rol: Lider Tecnico TQS&#xa;• Vista Aislada (Solo Mi Perfil TQS)&#xa;• Validacion de VOBO (Checklist QAS)&#xa;• Ventana En Ejecucion y Bloqueo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0284c7;fontColor=#1e293b;fontSize=9;fontStyle=0;align=left;spacingLeft=8;" vertex="1" parent="box_clients">
+          <mxGeometry x="320" y="35" width="260" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="role_director" value="Rol: Direccion Ejecutiva&#xa;• Tasa de Exito Global (Meta &gt;=95%)&#xa;• Balance de Carga por Especialista&#xa;• Extraccion CSV y Atlas Copilot" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#16a34a;fontColor=#1e293b;fontSize=9;fontStyle=0;align=left;spacingLeft=8;" vertex="1" parent="box_clients">
+          <mxGeometry x="620" y="35" width="260" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="role_guardia" value="Rol: Guardia / FTE Soporte&#xa;• Modo 'Mis Sistemas &amp; Backup'&#xa;• Atencion de Incidentes y KITs&#xa;• Soporte Activo en Fin de Semana" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d97706;fontColor=#1e293b;fontSize=9;fontStyle=0;align=left;spacingLeft=8;" vertex="1" parent="box_clients">
+          <mxGeometry x="920" y="35" width="270" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- CAPA 2: FRONTEND CONTAINER (NGINX + SPA) -->
+        <!-- ========================================== -->
+        <mxCell id="box_frontend" value="CAPA 2: CONTENEDOR FRONTEND (atlas_frontend · Nginx Alpine · Puerto 8443 HTTPS / 80 HTTP)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f0f9ff;strokeColor=#0284c7;fontColor=#0369a1;fontStyle=1;fontSize=11;startSize=26;" vertex="1" parent="1">
+          <mxGeometry x="40" y="245" width="1220" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="fe_nginx" value="Nginx Reverse Proxy &amp; Hardening&#xa;• SSL/TLS Termination (Puerto 8443)&#xa;• Compresion Gzip (Nivel 6)&#xa;• HSTS, X-Frame SAMEORIGIN&#xa;• SPA Fallback: try_files $uri /index.html" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0284c7;fontColor=#1e293b;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="box_frontend">
+          <mxGeometry x="20" y="35" width="280" height="95" as="geometry" />
+        </mxCell>
+
+        <mxCell id="fe_spa" value="Single Page Application (index.html + styles.css)&#xa;• App Shell Responsive: Viewport Clamp calc(100vw - 248px)&#xa;• Estado Global Reactivo (window.state, filtros, currentUser)&#xa;• Desacoplamiento de Titularidad TQS (getUserEffectiveSystems)&#xa;• Modales: VOBO, Transferencia Sistemas, Dropzone Correo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0284c7;fontColor=#1e293b;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="box_frontend">
+          <mxGeometry x="330" y="35" width="370" height="95" as="geometry" />
+        </mxCell>
+
+        <mxCell id="fe_modules" value="Modulos de Negocio en Cliente&#xa;• Dashboard KPIs y Graficos 3D&#xa;• En Ejecucion (Bloqueo en Caliente)&#xa;• Aprobados y Alertas Proximas (7d)&#xa;• Finalizados y Cancelados (Bitacora)&#xa;• Solicitudes y Tickets de Soporte" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0284c7;fontColor=#1e293b;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="box_frontend">
+          <mxGeometry x="730" y="35" width="220" height="95" as="geometry" />
+        </mxCell>
+
+        <mxCell id="fe_client_http" value="Cliente HTTP e Interceptores&#xa;• smartFetch(): Inyeccion Bearer JWT&#xa;• Normalizador REST PostgREST&#xa;• Manejo de Errores 401/403/500&#xa;• Almacenamiento Seguro Token" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0284c7;fontColor=#1e293b;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="box_frontend">
+          <mxGeometry x="980" y="35" width="215" height="95" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- CAPA 3: BACKEND CONTAINER (NODE.JS + API) -->
+        <!-- ========================================== -->
+        <mxCell id="box_backend" value="CAPA 3: CONTENEDOR BACKEND (atlas_backend · Node.js 20 LTS Express · Puerto 54321)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#16a34a;fontColor=#166534;fontStyle=1;fontSize=11;startSize=26;" vertex="1" parent="1">
+          <mxGeometry x="40" y="420" width="1220" height="170" as="geometry" />
+        </mxCell>
+
+        <mxCell id="be_security" value="Capa de Seguridad y Auth&#xa;• Helmet, CORS &amp; Rate Limit&#xa;• JWT HMAC-SHA256 (8 horas)&#xa;• Password Hash bcrypt (salt 10)&#xa;• Middleware RBAC por Roles&#xa;• enforceExecutionWindowLock" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#16a34a;fontColor=#1e293b;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="box_backend">
+          <mxGeometry x="20" y="35" width="220" height="115" as="geometry" />
+        </mxCell>
+
+        <mxCell id="be_routes" value="Rutas RESTful &amp; PostgREST Mappings&#xa;• /auth/v1/token, /auth/v1/recover, /auth/v1/me&#xa;• /auth/v1/admin/users, /auth/v1/admin/reset-password&#xa;• /rest/v1/rfcs (Filtros eq, in, order, limit)&#xa;• /rest/v1/sistemas (Catalogo y Transferencias)&#xa;• /rest/v1/solicitudes (Incidentes, KITs, RCAs)&#xa;• /rest/v1/log_auditoria, log_aplicacion, log_actividades" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#16a34a;fontColor=#1e293b;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="box_backend">
+          <mxGeometry x="260" y="35" width="340" height="115" as="geometry" />
+        </mxCell>
+
+        <mxCell id="be_engines" value="Motores Heuristicos de Negocio&#xa;• Parser Drag &amp; Drop Correo (.msg/.eml)&#xa;  Extraccion de 10 atributos + Anti-duplicados&#xa;• Ingesta Masiva Excel (.xlsx)&#xa;  Normalizacion de alias y asignacion TQS&#xa;• Orquestacion Telemetria PostgreSQL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#16a34a;fontColor=#1e293b;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="box_backend">
+          <mxGeometry x="620" y="35" width="290" height="115" as="geometry" />
+        </mxCell>
+
+        <mxCell id="be_copilot_pool" value="Copilot n8n &amp; Connection Pool&#xa;• Webhook n8n (10.10.10.103:5678)&#xa;  Ruta: /api/copilot/chat&#xa;• Pool PostgreSQL (pg.Pool)&#xa;  Max: 20 clientes | Idle: 30s&#xa;  Transacciones atomicas BEGIN/COMMIT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#16a34a;fontColor=#1e293b;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="box_backend">
+          <mxGeometry x="930" y="35" width="265" height="115" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- CAPA 4: PERSISTENCIA (POSTGRESQL 15) -->
+        <!-- ========================================== -->
+        <mxCell id="box_database" value="CAPA 4: CONTENEDOR PERSISTENCIA (atlas_postgres · PostgreSQL 15 · Puerto 5432)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#fffbeb;strokeColor=#d97706;fontColor=#78350f;fontStyle=1;fontSize=11;startSize=26;" vertex="1" parent="1">
+          <mxGeometry x="40" y="615" width="1220" height="160" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db_tables_core" value="Tablas Principales de Operacion&#xa;• public.rfcs (1,684 registros historicos y activos)&#xa;  Columnas: folio, sistema, tqs, coordinador, promotor, fechas&#xa;• public.sistemas (54 sistemas maestros de Coca-Cola FEMSA)&#xa;  Columnas: sid, criticidad (1 a 3), infraestructura, titular, backup&#xa;• public.solicitudes (Incidentes, KITs, RCAs y Requerimientos)&#xa;• public.tqs_users (Credenciales hash, roles RBAC, sistemas_backup)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d97706;fontColor=#1e293b;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="box_database">
+          <mxGeometry x="20" y="35" width="410" height="105" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db_audit" value="Tablas de Auditoria y Trazabilidad Forense&#xa;• public.log_auditoria (Disparadores de motor PostgreSQL)&#xa;  Captura automatica de INSERT, UPDATE y DELETE con DIFF JSON&#xa;• public.log_aplicacion (Trazas de servidor Express y excepciones)&#xa;• public.log_actividades (Eventos de usuario, sesiones e IPs)&#xa;• public.log_sincronizacion (Auditoria de cargas masivas)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d97706;fontColor=#1e293b;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="box_database">
+          <mxGeometry x="460" y="35" width="390" height="105" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db_triggers" value="Disparadores DB (Triggers Inviolables)&#xa;• fn_atlas_audit_trigger():&#xa;  Vinculado a rfcs, sistemas, solicitudes y tqs_users&#xa;  Garantia de integridad forense independiente de la capa web&#xa;• Indices B-Tree en folio, fecha_inicio, owner_id y sid" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d97706;fontColor=#1e293b;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="box_database">
+          <mxGeometry x="880" y="35" width="315" height="105" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- RED INTERNA DOCKER BRIDGE (CONECTORES) -->
+        <!-- ========================================== -->
+        <!-- Conector Clientes -> Frontend -->
+        <mxCell id="conn_c_to_fe" value="HTTPS 8443 / TLS 1.3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#0284c7;strokeWidth=2.5;fontColor=#0369a1;fontSize=9;fontStyle=1;" edge="1" parent="1" source="box_clients" target="box_frontend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Conector Frontend -> Backend -->
+        <mxCell id="conn_fe_to_be" value="Red Docker Interna (atlas_network) · HTTP Proxy Pass :54321 (/rest/*, /auth/*, /api/*)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#16a34a;strokeWidth=2.5;fontColor=#166534;fontSize=9;fontStyle=1;" edge="1" parent="1" source="box_frontend" target="box_backend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Conector Backend -> PostgreSQL -->
+        <mxCell id="conn_be_to_db" value="TCP Socket 5432 · Connection Pool (pg.Pool) con Transacciones Atomicas" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#d97706;strokeWidth=2.5;fontColor=#78350f;fontSize=9;fontStyle=1;" edge="1" parent="1" source="box_backend" target="box_database">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+
