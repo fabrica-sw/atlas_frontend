@@ -3,7 +3,7 @@
 Cliente web oficial de **ATLAS Platform v3.0** (Operaciones SAP Coca-Cola FEMSA).
 Arquitectura Single Page Application (SPA) de alta densidad y rendimiento para el control transaccional de ventanas de cambio (RFCs), aprobaciones técnicas (VOBO), auditoría y observabilidad de 54 sistemas maestros.
 
-- **Repositorio Oficial:** [https://github.com/eaguilarh/atlas-frontend.git](https://github.com/eaguilarh/atlas-frontend.git)
+- **Repositorio Oficial:** [https://github.com/eaguilarh01/atlas_frontend.git](https://github.com/eaguilarh01/atlas_frontend.git)
 - **Organización:** EAS Consulting Group
 - **Versión:** 3.0.0
 - **Stack Tecnológico:** HTML5, CSS3 Nativo (Variables de Tema y Viewport Clamp), JavaScript ES2022, SheetJS, Lucide, Nginx 1.25 Alpine

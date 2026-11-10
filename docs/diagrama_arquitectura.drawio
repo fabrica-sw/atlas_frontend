@@ -12,10 +12,10 @@
         </mxCell>
 
         <!-- BADGES GITHUB REPOSITORIOS -->
-        <mxCell id="repo_frontend_badge" value="Frontend Repo: https://github.com/eaguilarh/atlas-frontend.git (Nginx + SPA)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f9ff;strokeColor=#0284c7;fontColor=#0369a1;fontStyle=1;fontSize=10;align=center;" vertex="1" parent="1">
+        <mxCell id="repo_frontend_badge" value="Frontend Repo: https://github.com/eaguilarh01/atlas_frontend.git (Nginx + SPA)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f9ff;strokeColor=#0284c7;fontColor=#0369a1;fontStyle=1;fontSize=10;align=center;" vertex="1" parent="1">
           <mxGeometry x="40" y="78" width="590" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="repo_backend_badge" value="Backend Repo: https://github.com/eaguilarh/atlas-backend.git (Node.js 20 LTS + PostgreSQL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#16a34a;fontColor=#166534;fontStyle=1;fontSize=10;align=center;" vertex="1" parent="1">
+        <mxCell id="repo_backend_badge" value="Backend Repo: https://github.com/eaguilarh01/atlas_backend.git (Node.js 20 LTS + PostgreSQL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#16a34a;fontColor=#166534;fontStyle=1;fontSize=10;align=center;" vertex="1" parent="1">
           <mxGeometry x="670" y="78" width="590" height="26" as="geometry" />
         </mxCell>
 
