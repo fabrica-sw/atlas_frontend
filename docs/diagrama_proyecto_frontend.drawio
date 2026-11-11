@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-11-10T17:30:00.000Z" agent="ATLAS Engineering" version="22.0.0" type="device">
+  <diagram id="atlas_project_frontend" name="ATLAS Frontend - Diagrama del Proyecto">
+    <mxGraphModel dx="1422" dy="850" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1360" pageHeight="920" background="#ffffff">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- BANNER TITULO -->
+        <mxCell id="fe_title" value="ATLAS Platform v3.0 — Diagrama del Proyecto Frontend (SPA Operativa SAP)&#xa;EAS Consulting Group · Repositorio: eaguilarh01/atlas_frontend" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f2b5c;strokeColor=#0f2b5c;fontColor=#ffffff;fontStyle=1;fontSize=14;align=center;" vertex="1" parent="1">
+          <mxGeometry x="30" y="20" width="1300" height="52" as="geometry" />
+        </mxCell>
+
+        <!-- CAPA A: PERFILES DE ACCESO Y PERSPECTIVA TQS -->
+        <mxCell id="lane_roles" value="1. PERFILES RBAC Y MODO DE PERSPECTIVA EN INTERFAZ (CURRENT_USER)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;fontColor=#0f2b5c;fontStyle=1;fontSize=11;startSize=28;" vertex="1" parent="1">
+          <mxGeometry x="30" y="90" width="1300" height="125" as="geometry" />
+        </mxCell>
+
+        <mxCell id="r_admin" value="Admin / Director&#xa;• Vista Global de los 54 Sistemas KOF&#xa;• Gobernanza: Catalogo, Usuarios, Logs 360°&#xa;• Atlas Copilot IA &amp; Transferencia TQS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0f2b5c;fontColor=#1e293b;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="lane_roles">
+          <mxGeometry x="20" y="38" width="290" height="72" as="geometry" />
+        </mxCell>
+
+        <mxCell id="r_tqs_iso" value="TQS Leader — [Solo Mi Perfil TQS]&#xa;• Aislamiento estricto (owner_id / tqs_ids)&#xa;• KPIs personales sin inflacion de backups&#xa;• Sidebar: SAP + No SAP propios" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f9ff;strokeColor=#0284c7;fontColor=#0369a1;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="lane_roles">
+          <mxGeometry x="340" y="38" width="300" height="72" as="geometry" />
+        </mxCell>
+
+        <mxCell id="r_tqs_bkp" value="TQS Leader — [Mis Sistemas &amp; Backup]&#xa;• Herencia de titular (tqs_users.backup_tqs_id)&#xa;• Ve sistemas individuales y RFCs del titular&#xa;• Seccion dedicada en sidebar: Sistemas Backup" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffbeb;strokeColor=#d97706;fontColor=#92400e;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="lane_roles">
+          <mxGeometry x="670" y="38" width="310" height="72" as="geometry" />
+        </mxCell>
+
+        <mxCell id="r_fte" value="FTE / Guardia Fin de Semana&#xa;• Lectura por siguiendo_tqs o ventanas activas&#xa;• Alertas Activas (7d) y Bandeja de Solicitudes&#xa;• Ejecucion y cierre operativo de cambios" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#16a34a;fontColor=#166534;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="lane_roles">
+          <mxGeometry x="1010" y="38" width="270" height="72" as="geometry" />
+        </mxCell>
+
+        <!-- CAPA B: MODULOS FUNCIONALES DEL APP SHELL -->
+        <mxCell id="lane_modules" value="2. ARBOL DE MODULOS OPERATIVOS DE LA SPA (index.html + styles.css)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f0f9ff;strokeColor=#0284c7;fontColor=#0369a1;fontStyle=1;fontSize=11;startSize=28;" vertex="1" parent="1">
+          <mxGeometry x="30" y="235" width="1300" height="250" as="geometry" />
+        </mxCell>
+
+        <mxCell id="m_dash" value="Dashboard Ejecutivo &amp; KPIs&#xa;• Tasa de Exito, Total Ventanas, Alertas&#xa;• Grafico Tendencia Mensual &amp; Dona Carga&#xa;• Desglose por TQS y Nivel de Criticidad&#xa;• Exportacion CSV (General / Filtrado)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0284c7;fontColor=#1e293b;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="lane_modules">
+          <mxGeometry x="20" y="40" width="290" height="88" as="geometry" />
+        </mxCell>
+
+        <mxCell id="m_rfcs" value="Bandejas por Estatus RFC&#xa;• En Espera de VOBO (Checklist QAS)&#xa;• Aprobados (Preparacion y Bloqueo Horario)&#xa;• En Ejecucion (Edicion en Caliente Protegida)&#xa;• Finalizados con Exito / Cancelados / Acciones Batch" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0284c7;fontColor=#1e293b;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="lane_modules">
+          <mxGeometry x="340" y="40" width="310" height="88" as="geometry" />
+        </mxCell>
+
+        <mxCell id="m_alertas" value="Alertas Activas &amp; Solicitudes&#xa;• Ventanas Proximas (Horizonte 7 dias)&#xa;• RFCs vencidos sin cierre oportuno&#xa;• Tickets KOF/EAS: KIT, Incidente, RCA, Req.&#xa;• Bitacora de seguimiento y Action Items" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0284c7;fontColor=#1e293b;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="lane_modules">
+          <mxGeometry x="680" y="40" width="290" height="88" as="geometry" />
+        </mxCell>
+
+        <mxCell id="m_admin" value="Gobernanza y Auditoria (Admin)&#xa;• Catalogo de 54 Sistemas Maestros (Individuales)&#xa;• Transferencia TQS Titular / Backup&#xa;• Gestion Usuarios RBAC y Reseteo Claves&#xa;• Logs 360° (Auditoria DB + App Logs)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0f2b5c;fontColor=#1e293b;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="lane_modules">
+          <mxGeometry x="1000" y="40" width="280" height="88" as="geometry" />
+        </mxCell>
+
+        <mxCell id="m_ingesta" value="Ingesta Inteligente de Datos (Formulario Nuevo RFC)&#xa;• Autocompletado Drag &amp; Drop de Correos (.msg / .eml)&#xa;• Carga Masiva desde Excel (.xlsx con SheetJS)&#xa;• Deteccion de Duplicados y Validacion Horaria&#xa;• Picklist Multiselect TQS &amp; Sincronizacion de Edicion" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#16a34a;fontColor=#166534;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="lane_modules">
+          <mxGeometry x="20" y="145" width="400" height="88" as="geometry" />
+        </mxCell>
+
+        <mxCell id="m_sidebar" value="Navegacion de Sistemas Individuales (Sidebar Dinamico)&#xa;• Grupo SAP (S/4, BW, CRM, ECC RLP, SLT, GRC, etc.)&#xa;• Grupo No SAP (Citrix, Zscaler, CyberArk, AzCopy, Qlik)&#xa;• Grupo Sistemas Backup (Suplencia del titular asignado)&#xa;• Buscador en tiempo real + getSheet() sobre getAllRaw()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffbeb;strokeColor=#d97706;fontColor=#92400e;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="lane_modules">
+          <mxGeometry x="450" y="145" width="410" height="88" as="geometry" />
+        </mxCell>
+
+        <mxCell id="m_copilot" value="ATLAS IA Copilot &amp; Exportables&#xa;• Panel contextual alimentado con estado en vivo&#xa;• Consulta hacia POST /api/copilot/chat (n8n)&#xa;• Manuales PDF integrados por Rol&#xa;• Reportes CSV descargables desde cualquier tabla" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6366f1;fontColor=#312e81;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="lane_modules">
+          <mxGeometry x="890" y="145" width="390" height="88" as="geometry" />
+        </mxCell>
+
+        <!-- CAPA C: FLUJO DE ESTADOS RFC EN UI -->
+        <mxCell id="lane_lifecycle" value="3. FLUJO OPERATIVO DEL CAMBIO (RFC) Y CONTROLES EN INTERFAZ" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;fontColor=#0f2b5c;fontStyle=1;fontSize=11;startSize=28;" vertex="1" parent="1">
+          <mxGeometry x="30" y="505" width="1300" height="145" as="geometry" />
+        </mxCell>
+
+        <mxCell id="st_ingest" value="Alta / Ingreso&#xa;• Manual / .msg / .xlsx&#xa;• saveRecord() async" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#475569;fontColor=#0f172a;fontStyle=1;fontSize=10;" vertex="1" parent="lane_lifecycle">
+          <mxGeometry x="25" y="48" width="160" height="68" as="geometry" />
+        </mxCell>
+
+        <mxCell id="st_vobo" value="En espera de VOBO&#xa;• Validacion tecnica TQS&#xa;• Checklist previo QAS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;fontColor=#78350f;fontStyle=1;fontSize=10;" vertex="1" parent="lane_lifecycle">
+          <mxGeometry x="225" y="48" width="175" height="68" as="geometry" />
+        </mxCell>
+
+        <mxCell id="st_aprobado" value="Aprobado&#xa;• Ventana programada&#xa;• Alertas 7d activas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#0284c7;fontColor=#0c4a6e;fontStyle=1;fontSize=10;" vertex="1" parent="lane_lifecycle">
+          <mxGeometry x="440" y="48" width="175" height="68" as="geometry" />
+        </mxCell>
+
+        <mxCell id="st_ejecucion" value="En Ejecucion&#xa;• Bloqueo de fechas en UI&#xa;• Bitacora activa" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#7c3aed;fontColor=#4c1d95;fontStyle=1;fontSize=10;" vertex="1" parent="lane_lifecycle">
+          <mxGeometry x="655" y="48" width="180" height="68" as="geometry" />
+        </mxCell>
+
+        <mxCell id="st_final" value="Finalizado con exito&#xa;• Cierre operativo &amp; KPIs&#xa;• Contabilizado en Meta" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;fontColor=#14532d;fontStyle=1;fontSize=10;" vertex="1" parent="lane_lifecycle">
+          <mxGeometry x="875" y="48" width="190" height="68" as="geometry" />
+        </mxCell>
+
+        <mxCell id="st_cancel" value="Cancelado / Reprog.&#xa;• Motivo obligatorio&#xa;• Historico auditable" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#dc2626;fontColor=#7f1d1d;fontStyle=1;fontSize=10;" vertex="1" parent="lane_lifecycle">
+          <mxGeometry x="1100" y="48" width="175" height="68" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_st1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#475569;strokeWidth=2;endArrow=block;" edge="1" parent="lane_lifecycle" source="st_ingest" target="st_vobo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_st2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d97706;strokeWidth=2;endArrow=block;" edge="1" parent="lane_lifecycle" source="st_vobo" target="st_aprobado">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_st3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#0284c7;strokeWidth=2;endArrow=block;" edge="1" parent="lane_lifecycle" source="st_aprobado" target="st_ejecucion">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_st4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#16a34a;strokeWidth=2;endArrow=block;" edge="1" parent="lane_lifecycle" source="st_ejecucion" target="st_final">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_st5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;dashed=1;strokeColor=#dc2626;strokeWidth=1.5;endArrow=block;" edge="1" parent="lane_lifecycle" source="st_ejecucion" target="st_cancel">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="745" y="130" />
+              <mxPoint x="1187" y="130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- CAPA D: CAPA DE COMUNICACION Y CONTRATO API -->
+        <mxCell id="lane_comm" value="4. CONTRATO DE COMUNICACION FRONTEND -> BACKEND (smartFetch + Nginx Reverse Proxy)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#16a34a;fontColor=#166534;fontStyle=1;fontSize=11;startSize=28;" vertex="1" parent="1">
+          <mxGeometry x="30" y="670" width="1300" height="125" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c_auth" value="Sesion y Autenticacion JWT&#xa;• POST /auth/v1/token (login)&#xa;• GET /auth/v1/me (rehidratacion)&#xa;• Interceptores 401/403 + Logout" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#16a34a;fontColor=#1e293b;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="lane_comm">
+          <mxGeometry x="20" y="38" width="290" height="72" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c_rest" value="Persistencia Transaccional PostgREST&#xa;• GET/POST/PATCH /rest/v1/rfcs&#xa;• GET/PATCH /rest/v1/sistemas&#xa;• GET/POST/PATCH /rest/v1/solicitudes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#16a34a;fontColor=#1e293b;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="lane_comm">
+          <mxGeometry x="340" y="38" width="300" height="72" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c_bkp" value="Endpoints Especializados Operativos&#xa;• GET /api/rfcs/user-backup-view&#xa;• POST /api/rfcs/bulk-upsert&#xa;• POST /api/admin/transfer-system" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#16a34a;fontColor=#1e293b;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="lane_comm">
+          <mxGeometry x="670" y="38" width="300" height="72" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c_nginx" value="Entrega Nginx &amp; Hardening&#xa;• Fallback SPA (try_files /index.html)&#xa;• Gzip Nivel 6 + Cache Estatico 30d&#xa;• Proxy Pass hacia :54321" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0284c7;fontColor=#1e293b;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="lane_comm">
+          <mxGeometry x="1000" y="38" width="280" height="72" as="geometry" />
+        </mxCell>
+
+        <!-- CONECTORES ENTRE CAPAS -->
+        <mxCell id="e_l1_l2" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#0f2b5c;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="lane_roles" target="lane_modules">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_l2_l3" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#0284c7;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="lane_modules" target="lane_lifecycle">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_l3_l4" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#16a34a;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="lane_lifecycle" target="lane_comm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
