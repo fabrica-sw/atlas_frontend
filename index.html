@@ -9517,9 +9517,9 @@ autocompletará todos los campos del formulario.</div>
 
 <button class="btn btn-warning btn-sm" onclick="showReprogramarModal()" aria-label="Reprogramar RFC">📅 Reprogramar RFC</button>
 
-              <button class="btn btn-ghost btn-sm border-green-text-green" aria-label="Exportar para MS Project"
+<button class="btn btn-secondary btn-sm" onclick="exportCSVSheet()" title="Descargar registros filtrados en archivo CSV">Descargar CSV</button>
 
-onclick="showExportMPPModal()">CSV</button>
+<button class="btn btn-ghost btn-sm border-green-text-green" aria-label="Exportar para MS Project" onclick="showExportMPPModal()" title="Exportación avanzada formato MS Project">MS Project</button>
 
 </div>
 
@@ -9530,6 +9530,14 @@ onclick="showExportMPPModal()">CSV</button>
 <div class="search-box"><input type="text" placeholder="Buscar por RFC, sistema, promotor, TQS..."
 
 id="sheet-search" oninput="debouncedApplyFilters()"></div>
+
+<div class="date-range-group" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2,#ffffff);border:1px solid var(--border);border-radius:8px;padding:2px 8px;" title="Filtrar por rango de fechas">
+  <span style="font-size:11px;font-weight:600;color:var(--text-muted);">Desde:</span>
+  <input type="date" id="sheet-date-from" class="filter-select-date" onchange="applyFilters()" title="Fecha Desde" aria-label="Fecha Desde" style="border:none;background:transparent;color:var(--text);font-family:var(--font);font-size:12px;cursor:pointer;">
+  <span style="font-size:11px;font-weight:600;color:var(--text-muted);">Hasta:</span>
+  <input type="date" id="sheet-date-to" class="filter-select-date" onchange="applyFilters()" title="Fecha Hasta" aria-label="Fecha Hasta" style="border:none;background:transparent;color:var(--text);font-family:var(--font);font-size:12px;cursor:pointer;">
+  <button type="button" class="btn-ghost-icon" onclick="clearSheetDateFilter()" title="Limpiar rango de fechas" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:13px;padding:0 2px;">&times;</button>
+</div>
 
 <select class="filter-select" id="filter-status" onchange="applyFilters()" title="Filtrar por Status"
 
@@ -13019,6 +13027,12 @@ function getSheet(name) {
 // (Según matrices operativas SAP AZURE y SAP ON-PREMISE)
 // =========================================================================
 const SISTEMA_COORDINADOR_MAP = {
+  // SISTEMAS ADICIONALES / NO SAP
+  'nmc networker': ['Mario Reyes', 'Viridiana Cortizo'],
+  'networker': ['Mario Reyes', 'Viridiana Cortizo'],
+  'nmc': ['Mario Reyes', 'Viridiana Cortizo'],
+  'networker console server': ['Mario Reyes', 'Viridiana Cortizo'],
+
   // SAP AZURE
   'ads': 'Ulises Gutiérrez',
   'grc': 'Daniel Ponce',
@@ -13102,17 +13116,21 @@ const SISTEMA_COORDINADOR_MAP = {
 function autoSelectKofCoordinatorsForSistemas(sistemas, formType = 'rfc') {
   if (!sistemas || !Array.isArray(sistemas)) return;
   const coordsToSelect = new Set();
+  const addMappedCoords = (val) => {
+    if (Array.isArray(val)) val.forEach(v => { if (v) coordsToSelect.add(v); });
+    else if (val) coordsToSelect.add(val);
+  };
 
   sistemas.forEach(sys => {
     if (!sys) return;
     const clean = String(sys).toLowerCase().replace(/^sap\s+/i, '').trim();
     if (SISTEMA_COORDINADOR_MAP[clean]) {
-      coordsToSelect.add(SISTEMA_COORDINADOR_MAP[clean]);
+      addMappedCoords(SISTEMA_COORDINADOR_MAP[clean]);
       return;
     }
     for (const key of Object.keys(SISTEMA_COORDINADOR_MAP)) {
       if (clean.includes(key) || key.includes(clean)) {
-        coordsToSelect.add(SISTEMA_COORDINADOR_MAP[key]);
+        addMappedCoords(SISTEMA_COORDINADOR_MAP[key]);
         break;
       }
     }
@@ -14342,6 +14360,11 @@ if (sSearch) sSearch.value = '';
 const sStatus = document.getElementById('filter-status');
 
 if (sStatus) sStatus.value = '';
+
+const dFrom = document.getElementById('sheet-date-from');
+if (dFrom) dFrom.value = '';
+const dTo = document.getElementById('sheet-date-to');
+if (dTo) dTo.value = '';
 
 if (typeof populateYearFilter === 'function') populateYearFilter(sheetName);
 
@@ -18045,9 +18068,23 @@ function clearAllColFilters() {
 
 colFilters = {};
 
+const dFrom = document.getElementById('sheet-date-from');
+if (dFrom) dFrom.value = '';
+const dTo = document.getElementById('sheet-date-to');
+if (dTo) dTo.value = '';
+
 applyFilters();
 
 }
+
+function clearSheetDateFilter() {
+  const dFrom = document.getElementById('sheet-date-from');
+  const dTo = document.getElementById('sheet-date-to');
+  if (dFrom) dFrom.value = '';
+  if (dTo) dTo.value = '';
+  if (typeof applyFilters === 'function') applyFilters();
+}
+window.clearSheetDateFilter = clearSheetDateFilter;
 
 function clearAllSheetFilters() {
   colFilters = {};
@@ -18057,6 +18094,10 @@ function clearAllSheetFilters() {
   if (sStatus) sStatus.value = '';
   const sYear = document.getElementById('filter-year');
   if (sYear) sYear.value = '';
+  const dFrom = document.getElementById('sheet-date-from');
+  if (dFrom) dFrom.value = '';
+  const dTo = document.getElementById('sheet-date-to');
+  if (dTo) dTo.value = '';
   globalYearFilter = '';
   if (typeof applyFilters === 'function') applyFilters();
   if (typeof showToast === 'function') showToast('Todos los filtros han sido restablecidos', 'info');
@@ -18091,9 +18132,22 @@ const clearBtn = document.getElementById('clear-all-btn');
 
 const activeFilters = Object.entries(colFilters).filter(([k, v]) => v.size > 0);
 
-clearBtn.style.display = activeFilters.length > 0 ? '' : 'none';
+const dFrom = document.getElementById('sheet-date-from')?.value || '';
+const dTo = document.getElementById('sheet-date-to')?.value || '';
+const hasDateFilter = Boolean(dFrom || dTo);
 
-chips.innerHTML = activeFilters.map(([key, vals]) => {
+clearBtn.style.display = (activeFilters.length > 0 || hasDateFilter) ? '' : 'none';
+
+let dateChipHtml = '';
+if (dFrom && dTo) {
+  dateChipHtml = `<div class="chip"><span style="color:var(--text3)">Periodo:</span> ${escapeHtml(dFrom)} al ${escapeHtml(dTo)} <span class="chip-x" onclick="clearSheetDateFilter()">&times;</span></div>`;
+} else if (dFrom) {
+  dateChipHtml = `<div class="chip"><span style="color:var(--text3)">Desde:</span> ${escapeHtml(dFrom)} <span class="chip-x" onclick="clearSheetDateFilter()">&times;</span></div>`;
+} else if (dTo) {
+  dateChipHtml = `<div class="chip"><span style="color:var(--text3)">Hasta:</span> ${escapeHtml(dTo)} <span class="chip-x" onclick="clearSheetDateFilter()">&times;</span></div>`;
+}
+
+chips.innerHTML = dateChipHtml + activeFilters.map(([key, vals]) => {
 
 const col = COLUMNS.find(c => c.key === key);
 
@@ -18144,6 +18198,9 @@ const status = (document.getElementById('filter-status')?.value || '').trim().to
 
 const year = document.getElementById('filter-year')?.value || '';
 
+const fechaDesde = document.getElementById('sheet-date-from')?.value || '';
+const fechaHasta = document.getElementById('sheet-date-to')?.value || '';
+
 filteredData = data.filter(r => {
 
 if (search) {
@@ -18173,6 +18230,16 @@ if (status) {
 }
 
 if (year && !(r.fecha || '').startsWith(year)) return false;
+
+if (fechaDesde) {
+  const rFecha = (r.fecha || '').split('T')[0];
+  if (rFecha && rFecha < fechaDesde) return false;
+}
+
+if (fechaHasta) {
+  const rFecha = (r.fecha || '').split('T')[0];
+  if (rFecha && rFecha > fechaHasta) return false;
+}
 
 // Column filters
 
@@ -20708,18 +20775,28 @@ doExport(getAll(), 'TQS_Todos_RFC.csv');
 }
 
 function exportCSVSheet() {
+  const dFrom = document.getElementById('sheet-date-from')?.value || '';
+  const dTo = document.getElementById('sheet-date-to')?.value || '';
+  const cleanSys = String(currentSheet || 'General').replace(/[^a-zA-Z0-9_-]/g, '_');
+  let rangeTag = '';
+  if (dFrom && dTo) rangeTag = `_${dFrom}_a_${dTo}`;
+  else if (dFrom) rangeTag = `_desde_${dFrom}`;
+  else if (dTo) rangeTag = `_hasta_${dTo}`;
 
-doExport(filteredData.length ? filteredData : getSheet(currentSheet), 'TQS_' + currentSheet + '.csv');
-
+  const filename = `ATLAS_${cleanSys}${rangeTag}.csv`;
+  const records = (Array.isArray(filteredData) && filteredData.length > 0) ? filteredData : getSheet(currentSheet);
+  doExport(records, filename);
 }
+window.exportCSVSheet = exportCSVSheet;
 
 function doExport(data, filename) {
 
-  const headers = ['Tipo', 'Ambiente', 'Ticket', 'FechaInicio', 'FechaFin', 'FechaRetorno', 'HoraInicio', 'HoraFin', 'HoraFinRetorno', 'Sistema', 'Promotor', 'Coordinador', 'TQS', 'Status', 'Descripcion', 'Observaciones', 'Hoja'];
+  const headers = ['Tipo', 'Ambiente', 'Infraestructura', 'Ticket', 'FechaInicio', 'FechaFin', 'FechaRetorno', 'HoraInicio', 'HoraFin', 'HoraFinRetorno', 'Sistema', 'SID', 'Promotor', 'Coordinador_KOF', 'TQS', 'Status', 'Descripcion', 'Observaciones', 'Hoja'];
 
   const rows = data.map(r => [
     r.tipo || '',
     r.ambiente || '',
+    r.infraestructura || '',
     r.ticket || '',
     r.fecha || '',
     r.fechaFin || r.fecha_fin || '',
@@ -20728,6 +20805,7 @@ function doExport(data, filename) {
     r.horaFin || r.hora_fin || '',
     r.horaFinRetorno || r.hora_fin_retorno || '',
     r.sistema_name || r.sistema || '',
+    r.sid || '',
     r.promotor || '',
     r.coordinador_kof || '',
     (typeof formatTqsDisplay === 'function' ? formatTqsDisplay(r) : (r.tqs || '')),
@@ -20742,7 +20820,8 @@ function doExport(data, filename) {
     ...rows.map(row => row.map(cell => `"${(cell || '').toString().replace(/"/g, '""')}"`).join(','))
   ].join('\n');
 
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  // Incluir BOM UTF-8 (\uFEFF) para visualización correcta en Microsoft Excel
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -30598,7 +30677,404 @@ function convertISTtoCDMX(dateStr, timeStr) {
   }
 }
 
+function normalizeEmailPunctuation(str) {
+  if (!str) return '';
+  return str
+    .replace(/[\u2012\u2013\u2014\u2015]/g, '-')
+    .replace(/[\u2018\u2019\u201A]/g, "'")
+    .replace(/[\u201C\u201D\u201E]/g, '"')
+    .replace(/\u00A0/g, ' ');
+}
+
+function decompressLzfuRtf(bytes) {
+  if (!bytes || bytes.length < 16) return '';
+  try {
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const compSize = view.getUint32(0, true);
+    const rawSize = view.getUint32(4, true);
+    const compType = view.getUint32(8, true);
+
+    if (compType === 0x414C454D) {
+      let out = '';
+      for (let i = 16; i < Math.min(bytes.length, 16 + rawSize); i++) {
+        out += String.fromCharCode(bytes[i]);
+      }
+      return extractTextFromRtf(out);
+    }
+    if (compType !== 0x75465A4C) return '';
+
+    const initDictStr = '{\\rtf1\\ansi\\mac\\deff0\\deftab720{\\fonttbl;}{\\f0\\fnil \\froman \\fswiss \\fmodern \\fscript \\fdecor MS Sans SerifSymbolArialTimes New RomanCourier{\\colortbl\\red0\\green0\\blue0\r\n\\par \\pard\\plain\\f0\\fs20\\b\\i\\u\\tab\\tx';
+    const dict = new Uint8Array(4096);
+    for (let i = 0; i < initDictStr.length && i < 4096; i++) {
+      dict[i] = initDictStr.charCodeAt(i);
+    }
+    let writeOffset = initDictStr.length;
+    const outBytes = [];
+    let pos = 16;
+    const endPos = Math.min(bytes.length, compSize + 4);
+    let done = false;
+
+    while (pos < endPos && !done && outBytes.length < rawSize + 2048) {
+      const flags = bytes[pos++];
+      for (let bit = 0; bit < 8; bit++) {
+        if (pos >= endPos || done) break;
+        if ((flags & (1 << bit)) === 0) {
+          const b = bytes[pos++];
+          outBytes.push(b);
+          dict[writeOffset] = b;
+          writeOffset = (writeOffset + 1) & 4095;
+        } else {
+          if (pos + 1 >= endPos) { done = true; break; }
+          const b1 = bytes[pos++];
+          const b2 = bytes[pos++];
+          const offset = (b1 << 4) | (b2 >> 4);
+          const length = (b2 & 0x0F) + 2;
+          if (offset === writeOffset) { done = true; break; }
+          for (let k = 0; k < length; k++) {
+            const ch = dict[(offset + k) & 4095];
+            outBytes.push(ch);
+            dict[writeOffset] = ch;
+            writeOffset = (writeOffset + 1) & 4095;
+          }
+        }
+      }
+    }
+
+    let rtf = '';
+    try {
+      rtf = new TextDecoder('latin1').decode(new Uint8Array(outBytes));
+    } catch (e) {
+      for (let i = 0; i < outBytes.length; i++) rtf += String.fromCharCode(outBytes[i]);
+    }
+    return extractTextFromRtf(rtf);
+  } catch (e) {
+    return '';
+  }
+}
+
+function extractTextFromRtf(rtf) {
+  if (!rtf) return '';
+  if (/\\fromhtml/i.test(rtf)) {
+    let htmlOut = '';
+    let i = 0;
+    let skipGroupDepth = 0;
+    let groupDepth = 0;
+    while (i < rtf.length) {
+      const ch = rtf[i];
+      if (ch === '{') {
+        groupDepth++;
+        if (rtf.slice(i, i + 12) === '{\\*\\htmltag') {
+          const closeMeta = rtf.indexOf(' ', i + 12);
+          if (closeMeta !== -1 && closeMeta - i < 25) {
+            i = closeMeta + 1;
+            continue;
+          }
+        }
+        if (rtf.slice(i, i + 11) === '{\\*\\mhtmlta' || /^\{\\(?:fonttbl|colortbl|stylesheet|info|pict|object|header|footer|\*\\listtable|\*\\revtbl)/i.test(rtf.slice(i, i + 25))) {
+          if (skipGroupDepth === 0) skipGroupDepth = groupDepth;
+        }
+        i++;
+      } else if (ch === '}') {
+        if (skipGroupDepth === groupDepth) skipGroupDepth = 0;
+        groupDepth--;
+        i++;
+      } else if (skipGroupDepth > 0) {
+        i++;
+      } else if (ch === '\\') {
+        if (rtf[i + 1] === "'") {
+          const code = parseInt(rtf.slice(i + 2, i + 4), 16);
+          if (!isNaN(code)) htmlOut += String.fromCharCode(code);
+          i += 4;
+        } else if (rtf.slice(i, i + 2) === '\\{' || rtf.slice(i, i + 2) === '\\}' || rtf.slice(i, i + 2) === '\\\\') {
+          htmlOut += rtf[i + 1];
+          i += 2;
+        } else {
+          const m = rtf.slice(i).match(/^\\([a-zA-Z]+)(-?\d+)?[ ]?/);
+          if (m) {
+            if (m[1] === 'par' || m[1] === 'line') htmlOut += '\n';
+            else if (m[1] === 'tab') htmlOut += '\t';
+            else if (m[1] === 'u' && m[2]) {
+              const uc = parseInt(m[2], 10);
+              htmlOut += String.fromCharCode(uc < 0 ? uc + 65536 : uc);
+              if (rtf[i + m[0].length] === '?') i++;
+            }
+            i += m[0].length;
+          } else {
+            i += 2;
+          }
+        }
+      } else if (ch === '\r' || ch === '\n') {
+        i++;
+      } else {
+        htmlOut += ch;
+        i++;
+      }
+    }
+    return normalizeEmailPunctuation(htmlOut);
+  }
+
+  const plain = rtf
+    .replace(/\{\\(?:fonttbl|colortbl|stylesheet|info|pict|object|\*\\[^}]+)[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/gi, '')
+    .replace(/\\par\b\s*/g, '\n')
+    .replace(/\\line\b\s*/g, '\n')
+    .replace(/\\tab\b\s*/g, '\t')
+    .replace(/\\'([0-9a-fA-F]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/\\u(-?\d+)\??/g, (_, n) => { const c = parseInt(n, 10); return String.fromCharCode(c < 0 ? c + 65536 : c); })
+    .replace(/\\[a-zA-Z]+-?\d*\s?/g, '')
+    .replace(/[{}]/g, '');
+  return normalizeEmailPunctuation(plain);
+}
+
+function parseMsgOle2(arrayBuffer) {
+  try {
+    if (!arrayBuffer || arrayBuffer.byteLength < 512) return null;
+    const bytes = new Uint8Array(arrayBuffer);
+    const magic = [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1];
+    for (let i = 0; i < 8; i++) {
+      if (bytes[i] !== magic[i]) return null;
+    }
+
+    const view = new DataView(arrayBuffer);
+    const sectorShift = view.getUint16(30, true);
+    const miniSectorShift = view.getUint16(32, true);
+    const sectorSize = 1 << sectorShift;
+    const miniSectorSize = 1 << miniSectorShift;
+    const firstDirSector = view.getUint32(48, true);
+    const miniCutoff = view.getUint32(56, true);
+    const firstMiniFatSector = view.getUint32(60, true);
+    const numMiniFatSectors = view.getUint32(64, true);
+    const firstDifatSector = view.getUint32(68, true);
+    const numDifatSectors = view.getUint32(72, true);
+
+    const ENDOFCHAIN = 0xFFFFFFFE;
+    const FREESECT = 0xFFFFFFFF;
+
+    const readSector = (secId) => {
+      const offset = (secId + 1) * sectorSize;
+      if (offset < 0 || offset >= bytes.length) return new Uint8Array(0);
+      return bytes.subarray(offset, Math.min(bytes.length, offset + sectorSize));
+    };
+
+    const fatSectorIds = [];
+    for (let i = 0; i < 109; i++) {
+      const sid = view.getUint32(76 + i * 4, true);
+      if (sid !== FREESECT && sid !== ENDOFCHAIN) fatSectorIds.push(sid);
+    }
+    let difatSec = firstDifatSector;
+    let difatLoops = 0;
+    while (difatSec !== FREESECT && difatSec !== ENDOFCHAIN && difatLoops < numDifatSectors + 5) {
+      const sec = readSector(difatSec);
+      if (sec.length < sectorSize) break;
+      const sv = new DataView(sec.buffer, sec.byteOffset, sec.byteLength);
+      const entriesPerSec = (sectorSize / 4) - 1;
+      for (let i = 0; i < entriesPerSec; i++) {
+        const sid = sv.getUint32(i * 4, true);
+        if (sid !== FREESECT && sid !== ENDOFCHAIN) fatSectorIds.push(sid);
+      }
+      difatSec = sv.getUint32(entriesPerSec * 4, true);
+      difatLoops++;
+    }
+
+    const fat = [];
+    for (const fsid of fatSectorIds) {
+      const sec = readSector(fsid);
+      const sv = new DataView(sec.buffer, sec.byteOffset, sec.byteLength);
+      for (let i = 0; i + 4 <= sec.length; i += 4) {
+        fat.push(sv.getUint32(i, true));
+      }
+    }
+
+    const readChainBytes = (startSec, maxSize) => {
+      const chunks = [];
+      let total = 0;
+      let sec = startSec;
+      let safety = 0;
+      while (sec !== ENDOFCHAIN && sec !== FREESECT && sec < fat.length && safety < 50000) {
+        const sBytes = readSector(sec);
+        chunks.push(sBytes);
+        total += sBytes.length;
+        if (maxSize && total >= maxSize) break;
+        sec = fat[sec];
+        safety++;
+      }
+      const res = new Uint8Array(maxSize ? Math.min(total, maxSize) : total);
+      let off = 0;
+      for (const c of chunks) {
+        const copyLen = Math.min(c.length, res.length - off);
+        if (copyLen <= 0) break;
+        res.set(c.subarray(0, copyLen), off);
+        off += copyLen;
+      }
+      return res;
+    };
+
+    const dirBytes = readChainBytes(firstDirSector, 0);
+    const entries = [];
+    for (let off = 0; off + 128 <= dirBytes.length; off += 128) {
+      const nameLen = dirBytes[off + 64] | (dirBytes[off + 65] << 8);
+      if (nameLen < 2 || nameLen > 64) { entries.push(null); continue; }
+      let name = '';
+      for (let j = 0; j < nameLen - 2; j += 2) {
+        name += String.fromCharCode(dirBytes[off + j] | (dirBytes[off + j + 1] << 8));
+      }
+      const dv = new DataView(dirBytes.buffer, dirBytes.byteOffset + off);
+      entries.push({
+        id: entries.length,
+        name,
+        objType: dirBytes[off + 66],
+        leftId: dv.getInt32(68, true),
+        rightId: dv.getInt32(72, true),
+        childId: dv.getInt32(76, true),
+        startSec: dv.getUint32(116, true),
+        size: dv.getUint32(120, true)
+      });
+    }
+
+    const rootEntry = entries[0];
+    if (!rootEntry) return null;
+
+    let miniStream = new Uint8Array(0);
+    const miniFat = [];
+    if (rootEntry.startSec !== ENDOFCHAIN && rootEntry.startSec !== FREESECT && rootEntry.size > 0) {
+      miniStream = readChainBytes(rootEntry.startSec, rootEntry.size);
+    }
+    if (firstMiniFatSector !== ENDOFCHAIN && firstMiniFatSector !== FREESECT && numMiniFatSectors > 0) {
+      const mfBytes = readChainBytes(firstMiniFatSector, 0);
+      const mfv = new DataView(mfBytes.buffer, mfBytes.byteOffset, mfBytes.byteLength);
+      for (let i = 0; i + 4 <= mfBytes.length; i += 4) {
+        miniFat.push(mfv.getUint32(i, true));
+      }
+    }
+
+    const readEntryBytes = (entry) => {
+      if (!entry || entry.size === 0) return new Uint8Array(0);
+      if (entry.size < miniCutoff && miniStream.length > 0) {
+        const res = new Uint8Array(entry.size);
+        let off = 0;
+        let ms = entry.startSec;
+        let safety = 0;
+        while (ms !== ENDOFCHAIN && ms !== FREESECT && ms < miniFat.length && off < entry.size && safety < 50000) {
+          const sOff = ms * miniSectorSize;
+          const copyLen = Math.min(miniSectorSize, entry.size - off, miniStream.length - sOff);
+          if (copyLen <= 0) break;
+          res.set(miniStream.subarray(sOff, sOff + copyLen), off);
+          off += copyLen;
+          ms = miniFat[ms];
+          safety++;
+        }
+        return res;
+      }
+      return readChainBytes(entry.startSec, entry.size);
+    };
+
+    const decodeUtf16 = (b) => {
+      let s = '';
+      for (let i = 0; i + 1 < b.length; i += 2) {
+        const c = b[i] | (b[i + 1] << 8);
+        if (c === 0) break;
+        s += String.fromCharCode(c);
+      }
+      return normalizeEmailPunctuation(s);
+    };
+
+    const decodeAnsi = (b) => {
+      let s = '';
+      try {
+        s = new TextDecoder('utf-8', { fatal: false }).decode(b);
+      } catch (e) {
+        for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+      }
+      return normalizeEmailPunctuation(s.replace(/\0+$/, ''));
+    };
+
+    const getChildrenIds = (storageEntry) => {
+      const ids = [];
+      if (!storageEntry || storageEntry.childId < 0) return ids;
+      const stack = [storageEntry.childId];
+      const visited = new Set();
+      while (stack.length > 0) {
+        const id = stack.pop();
+        if (id < 0 || id >= entries.length || visited.has(id) || !entries[id]) continue;
+        visited.add(id);
+        ids.push(id);
+        if (entries[id].leftId >= 0) stack.push(entries[id].leftId);
+        if (entries[id].rightId >= 0) stack.push(entries[id].rightId);
+      }
+      return ids;
+    };
+
+    const rootChildren = getChildrenIds(rootEntry);
+    const props = {};
+    const recipients = [];
+
+    for (const cid of rootChildren) {
+      const e = entries[cid];
+      if (!e) continue;
+      if (e.objType === 2 && e.name.startsWith('__substg1.0_')) {
+        props[e.name.slice(12).toUpperCase()] = readEntryBytes(e);
+      } else if (e.objType === 1 && e.name.startsWith('__recip_version1.0_')) {
+        const rChildren = getChildrenIds(e);
+        const rParts = [];
+        for (const rcid of rChildren) {
+          const re = entries[rcid];
+          if (!re || re.objType !== 2) continue;
+          const rk = re.name.slice(12).toUpperCase();
+          if (rk === '3001001F' || rk === '39FE001F' || rk === '3003001F') {
+            rParts.push(decodeUtf16(readEntryBytes(re)));
+          } else if (rk === '3001001E' || rk === '39FE001E' || rk === '3003001E') {
+            rParts.push(decodeAnsi(readEntryBytes(re)));
+          }
+        }
+        if (rParts.length > 0) recipients.push(rParts.join(' '));
+      }
+    }
+
+    const getPropText = (idPrefix) => {
+      if (props[idPrefix + '001F']) return decodeUtf16(props[idPrefix + '001F']);
+      if (props[idPrefix + '001E']) return decodeAnsi(props[idPrefix + '001E']);
+      return '';
+    };
+
+    const subject = getPropText('0037') || getPropText('0E1D');
+    const sender = [getPropText('0C1A'), getPropText('0C1F'), getPropText('0042')].filter(Boolean).join(' ');
+    const toLine = getPropText('0E04');
+    const ccLine = getPropText('0E03');
+    const plainBody = getPropText('1000');
+
+    let htmlBody = '';
+    if (props['10130102']) htmlBody = decodeAnsi(props['10130102']);
+    else if (props['1013001F']) htmlBody = decodeUtf16(props['1013001F']);
+
+    let rtfBody = '';
+    if ((!plainBody && !htmlBody) || (plainBody.length < 80 && props['10090102'])) {
+      if (props['10090102']) rtfBody = decompressLzfuRtf(props['10090102']);
+    }
+
+    let chosenBody = plainBody || htmlBody || rtfBody;
+    if (htmlBody && (!plainBody || htmlBody.length > plainBody.length * 1.15)) {
+      chosenBody = htmlBody;
+    }
+
+    if (!subject && !chosenBody) return null;
+
+    return [
+      subject ? `Subject: ${subject}` : '',
+      sender ? `From: ${sender}` : '',
+      toLine ? `To: ${toLine}` : '',
+      ccLine ? `Cc: ${ccLine}` : '',
+      recipients.length > 0 ? `CcRecipients: ${recipients.join('; ')}` : '',
+      '',
+      chosenBody
+    ].filter(Boolean).join('\n');
+  } catch (err) {
+    return null;
+  }
+}
+
 function extractTextFromBinaryOrMsg(buffer) {
+  const oleText = parseMsgOle2(buffer);
+  if (oleText) return oleText;
+
   const bytes = new Uint8Array(buffer);
   let asciiChunks = [];
   let utf16Chunks = [];
@@ -30608,6 +31084,12 @@ function extractTextFromBinaryOrMsg(buffer) {
     const code = bytes[i] | (bytes[i + 1] << 8);
     if ((code >= 32 && code <= 126) || (code >= 160 && code <= 255) || code === 10 || code === 13 || code === 9) {
       curUtf16.push(String.fromCharCode(code));
+    } else if (code >= 0x2012 && code <= 0x2015) {
+      curUtf16.push('-');
+    } else if (code === 0x2018 || code === 0x2019) {
+      curUtf16.push("'");
+    } else if (code === 0x201C || code === 0x201D) {
+      curUtf16.push('"');
     } else {
       if (curUtf16.length >= 4) {
         utf16Chunks.push(curUtf16.join(''));
@@ -30616,6 +31098,9 @@ function extractTextFromBinaryOrMsg(buffer) {
     }
   }
   if (curUtf16.length >= 4) utf16Chunks.push(curUtf16.join(''));
+
+  const text16 = utf16Chunks.join('\n');
+  if (text16.length > 200) return text16;
 
   let curAscii = [];
   for (let i = 0; i < bytes.length; i++) {
@@ -30631,9 +31116,8 @@ function extractTextFromBinaryOrMsg(buffer) {
   }
   if (curAscii.length >= 4) asciiChunks.push(curAscii.join(''));
 
-  const text16 = utf16Chunks.join('\n');
   const textAscii = asciiChunks.join('\n');
-  return (text16.length > textAscii.length ? text16 : textAscii) + '\n' + (text16.length > textAscii.length ? textAscii : text16);
+  return text16.length > textAscii.length ? text16 : textAscii;
 }
 
 function decodeQuotedPrintable(str) {
@@ -30743,7 +31227,7 @@ function normalizeDateStr(rawDate, rawTime, isIST) {
     let t = rawTime.trim().toLowerCase();
     let isPM = t.includes('pm') || t.includes('p.m.') || t.includes('p. m.');
     let isAM = t.includes('am') || t.includes('a.m.') || t.includes('a. m.');
-    t = t.replace(/(am|pm|a\.\s*m\.|p\.\s*m\.|hrs|h|horas)/gi, '').trim();
+    t = t.replace(/(am|pm|a\.\s*m\.|p\.\s*m\.|hrs|h|horas|ist|cst|mx)/gi, '').trim();
     const tParts = t.split(':');
     let hh = parseInt(tParts[0], 10) || 0;
     let mm = parseInt(tParts[1], 10) || 0;
@@ -30786,21 +31270,31 @@ async function parseEmailFile(file, formType) {
         text = decodeQuotedPrintable(text);
       }
     }
+    text = normalizeEmailPunctuation(text);
 
     let subject = '';
     const subjMatch = text.match(/^Subject:\s*(.*)$/im);
-    if (subjMatch) subject = decodeMimeWords(subjMatch[1].trim());
+    if (subjMatch) subject = normalizeEmailPunctuation(decodeMimeWords(subjMatch[1].trim()));
 
     let fromPerson = '';
     const fromMatch = text.match(/^From:\s*(.*)$/im);
-    if (fromMatch) fromPerson = decodeMimeWords(fromMatch[1].trim());
+    if (fromMatch) fromPerson = normalizeEmailPunctuation(decodeMimeWords(fromMatch[1].trim()));
+
+    let toPerson = '';
+    const toMatch = text.match(/^To:\s*(.*)$/im);
+    if (toMatch) toPerson = normalizeEmailPunctuation(decodeMimeWords(toMatch[1].trim()));
+
+    let ccPerson = '';
+    const ccMatches = text.match(/^(?:Cc|CcRecipients):\s*(.*)$/gim);
+    if (ccMatches) ccPerson = normalizeEmailPunctuation(decodeMimeWords(ccMatches.join(' ')));
 
     // Limpieza de HTML y normalización de texto del correo
     const cleanText = text
       .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
       .replace(/<br\s*[\/]?>/gi, '\n')
-      .replace(/<\/(p|tr|div|h[1-6]|li)>/gi, '\n')
+      .replace(/<\/(tr|div|h[1-6]|li)>/gi, '\n')
+      .replace(/<\/(p|td|th)>/gi, ' ')
       .replace(/<[^>]+>/g, ' ')
       .replace(/&nbsp;/gi, ' ')
       .replace(/&amp;/gi, '&')
@@ -30812,39 +31306,43 @@ async function parseEmailFile(file, formType) {
       .replace(/\r/g, '\n');
 
     const cleanLines = cleanText.split('\n').map(l => l.trim()).filter(Boolean);
-    const combinedEmailText = subject + ' ' + cleanText;
+    const bodyNoHeaders = cleanLines
+      .filter(l => !/^(?:Subject|From|To|Cc|CcRecipients|Sent|Date|Enviado|Fecha|Received|De|Para|Asunto)\s*[:=]/i.test(l))
+      .join('\n');
 
-    // Solo convertir IST si el timezone IST está explícitamente indicado en la fecha/hora
-    let isExplicitIST = /\b(?:IST|India\s*Standard\s*Time)\b/i.test(combinedEmailText);
-
-    // 1. TICKET / RFC Y DESCRIPCIÓN DESDE EL ASUNTO
+    // 1. TICKET / RFC Y DESCRIPCIÓN DESDE EL ASUNTO Y CUERPO
     let ticket = '';
-    const cleanSubject = (subject || '').replace(/^(?:RE|RV|FW|FWD)\s*[:=-]\s*/ig, '').trim();
+    const cleanSubject = (subject || '')
+      .replace(/^(?:RE|RV|FW|FWD)\s*[:=-]\s*/ig, '')
+      .replace(/^(?:Application\s+for\s+authorization|Solicitud\s+de\s+autorizaci[oó]n)\s*\|\s*/i, '')
+      .trim();
 
     const ticketMatch = cleanSubject.match(/\b(?:CHG|RFC|INC|SOL|REQ)\d{4,12}\b/i) ||
                         cleanText.match(/\b(?:CHG|RFC|INC|SOL|REQ)\d{4,12}\b/i) ||
                         cleanText.match(/(?:ticket|folio|cambio|rfc)\s*[:#]?\s*([A-Za-z0-9_-]{4,20})/i);
     if (ticketMatch) ticket = (ticketMatch[1] || ticketMatch[0]).toUpperCase();
 
-    // Extraer descripción principal del título/asunto posterior al folio del RFC
+    // Extraer descripción principal completa sin truncamientos
     let descripcion = '';
     if (cleanSubject) {
       if (ticket && cleanSubject.toUpperCase().includes(ticket)) {
-        const parts = cleanSubject.split(new RegExp(ticket, 'i'));
-        if (parts.length > 1 && parts[1].trim().length > 0) {
-          descripcion = parts[1].replace(/^[\s:\-_/|]+/, '').trim();
-        }
+        const idx = cleanSubject.toUpperCase().indexOf(ticket);
+        const after = cleanSubject.slice(idx + ticket.length).replace(/^[\s:\-_/|]+/, '').trim();
+        if (after.length >= 5) descripcion = after;
       }
       if (!descripcion && ticket) {
-        descripcion = cleanSubject.replace(new RegExp(ticket, 'ig'), '').replace(/^[\s:\-_/|]+/, '').trim();
+        descripcion = cleanSubject.replace(new RegExp('\\b(?:RFC\\s+)?' + ticket + '\\b', 'ig'), '').replace(/^[\s:\-_/|]+/, '').trim();
       }
       if (!descripcion) {
         descripcion = cleanSubject.replace(/^(?:RFC\s*(?:Normal|Expedito|Estandar|Emergencia)?)\s*[:\-_]?\s*/i, '').trim();
       }
     }
-    // Fallback de descripción si el asunto no traía texto descriptivo sustancial
+    const numDescMatch = bodyNoHeaders.match(/Number\s+and\s+description\s+of\s+the\s+change\s*[\r\n]+\s*(?:RFC\s+)?(?:(?:CHG|RFC)\d{4,12}\s*)?([^\r\n]+)/i);
+    if (numDescMatch && numDescMatch[1].trim().length > (descripcion ? descripcion.length : 5)) {
+      descripcion = numDescMatch[1].trim();
+    }
     if (!descripcion || descripcion.length < 5) {
-      const descBlockMatch = cleanText.match(/(?:Descripci[oó]n(?:\s+del\s+cambio)?|Description(?:\s+of\s+change)?|Summary|Detalle|Scope\s*of\s*Work|Justificaci[oó]n|Motivo)\s*[:=]?\s*([^\r\n]+(?:\r?\n[^\r\n]+){0,5})/i);
+      const descBlockMatch = bodyNoHeaders.match(/(?:Descripci[oó]n(?:\s+del\s+cambio)?|Description(?:\s+of\s+change)?|Summary|Detalle|Scope\s*of\s*Work|Justificaci[oó]n|Motivo)\s*[:=]?\s*([^\r\n]+(?:\r?\n[^\r\n]+){0,5})/i);
       if (descBlockMatch && descBlockMatch[1].trim().length > 5) {
         descripcion = descBlockMatch[1].trim();
       } else if (cleanSubject) {
@@ -30852,73 +31350,65 @@ async function parseEmailFile(file, formType) {
       }
     }
 
-    // 2. TIPO DE RFC: 'RFC' (Normal) por defecto. Solo 'RFC - EXPEDITED' si es explícito Expedito/Emergencia y NO dice Normal
+    // 2. TIPO DE RFC: 'RFC' (Normal) por defecto. Solo 'RFC - EXPEDITED' si es explícito Expedito/Emergencia
     let tipo = 'RFC';
     const subLow = (subject || '').toLowerCase();
-    const textLow = cleanText.toLowerCase();
-    const isExplicitNormal = /\b(?:normal|est[aá]ndar|standard|regular)\b/i.test(subLow) ||
-                             /(?:tipo(?:\s+de)?\s*(?:cambio|rfc)?|change\s*type|type)\s*[:=-]\s*(?:.*?\b)?(?:normal|est[aá]ndar|standard|regular)\b/i.test(textLow);
+    const textLow = bodyNoHeaders.toLowerCase();
+    const isExplicitNormal = /\b(?:normal|est[aá]ndar|standard|regular|minor)\b/i.test(subLow) ||
+                             /(?:tipo(?:\s+de)?\s*(?:cambio|rfc)?|change\s*type|type)\s*[:=-]\s*(?:.*?\b)?(?:normal|est[aá]ndar|standard|regular|minor)\b/i.test(textLow);
     const isExpedited = /\b(?:expedito|expedited|emergencia|emergency)\b/i.test(subLow) ||
                         /(?:tipo(?:\s+de)?\s*(?:cambio|rfc)?|change\s*type|type)\s*[:=-]\s*(?:.*?\b)?(?:expedito|expedited|emergencia|emergency)\b/i.test(textLow) ||
                         /(?:prioridad|priority|urgencia)\s*[:=-]\s*(?:.*?\b)?(?:1\s*-?\s*cr[ií]tica|cr[ií]tica|urgente|expedito|emergencia)\b/i.test(textLow);
-    if (!isExplicitNormal && isExpedited) {
-      tipo = 'RFC - EXPEDITED';
-    } else {
-      tipo = 'RFC';
-    }
+    tipo = (!isExplicitNormal && isExpedited) ? 'RFC - EXPEDITED' : 'RFC';
 
-    // 3. AMBIENTE (PRD, QAS, PPRD, DEV, SANDBOX)
+    // 3. AMBIENTE (PRD, QAS, PPRD, DEV, SANDBOX) - Prioridad Asunto + Affected instances
     let ambiente = 'PRD';
-    const ambLine = cleanLines.find(l => /(?:Ambiente|Environment|Entorno|Tier|Env)\s*[:=-]\s*([^\r\n<]+)/i.test(l)) || '';
-    if (ambLine) {
-      const ambNorm = ambLine.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-      if (ambNorm.includes('PPRD') || ambNorm.includes('PREPROD') || ambNorm.includes('PRE-PROD') || ambNorm.includes('PREPRODUCTIVO')) {
-        ambiente = 'PPRD';
-      } else if (ambNorm.includes('QAS') || ambNorm.includes('CALIDAD') || ambNorm.includes('TEST') || ambNorm.includes('QA')) {
-        ambiente = 'QAS';
-      } else if (ambNorm.includes('DEV') || ambNorm.includes('DESARROLLO')) {
-        ambiente = 'DEV';
-      } else if (ambNorm.includes('SANDBOX') || ambNorm.includes('SBX')) {
-        ambiente = 'SANDBOX';
-      } else if (ambNorm.includes('PRD') || ambNorm.includes('PRODUCCION') || ambNorm.includes('PRODUCTIVO')) {
-        ambiente = 'PRD';
-      }
-    } else {
-      const textNorm = cleanText.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-      if (/\b(PPRD|PREPRODUCTIVO|PRE-PROD)\b/i.test(textNorm)) ambiente = 'PPRD';
-      else if (/\b(QAS|CALIDAD)\b/i.test(textNorm)) ambiente = 'QAS';
-      else if (/\b(DEV|DESARROLLO)\b/i.test(textNorm)) ambiente = 'DEV';
-      else if (/\b(SANDBOX|SBX)\b/i.test(textNorm)) ambiente = 'SANDBOX';
-      else if (/\b(PRD|PRODUCCION|PRODUCTIVO)\b/i.test(textNorm)) ambiente = 'PRD';
-    }
+    const affectedMatch = bodyNoHeaders.match(/Affected\s+instances\s+or\s+environments[\s\r\n]+([^\r\n]{2,150}(?:[\r\n]+[^\r\n]{2,150})?)/i);
+    const ambLine = cleanLines.find(l => /^(?:Ambiente|Environment|Entorno|Tier|Env)\s*[:=-]\s*([^\r\n<]+)/i.test(l)) || '';
 
-    // 4. DETECCIÓN DE SISTEMAS SAP CON LÍMITES DE PALABRA (\b)
+    const detectEnvFromStr = (str) => {
+      if (!str) return null;
+      const norm = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+      if (/\b(PPRD|PREPROD|PRE-PROD|PREPRODUCTIVO)\b/i.test(norm)) return 'PPRD';
+      if (/\b(QAS|QA|CALIDAD)\b/i.test(norm)) return 'QAS';
+      if (/\b(DEV|DESARROLLO)\b/i.test(norm)) return 'DEV';
+      if (/\b(SANDBOX|SBX)\b/i.test(norm)) return 'SANDBOX';
+      if (/\b(PRD|PRODUCCION|PRODUCTIVO)\b/i.test(norm)) return 'PRD';
+      return null;
+    };
+
+    ambiente = detectEnvFromStr(ambLine)
+      || detectEnvFromStr(cleanSubject)
+      || detectEnvFromStr(affectedMatch ? affectedMatch[1] : '')
+      || detectEnvFromStr(bodyNoHeaders)
+      || 'PRD';
+
+    // 4. DETECCIÓN DE SISTEMAS SAP / NO SAP (Sin falsos positivos de 2 letras en minúsculas)
     const knownSystems = [
-      'BW HANA Comercial', 'BW HANA Financiero', 'Solman', 'CRM', 'BTP', 'MuleSoft', 'EP', 'ECC',
+      'NMC Networker', 'Networker', 'BW HANA Comercial', 'BW HANA Financiero', 'Solman', 'CRM', 'BTP', 'MuleSoft', 'EP', 'ECC',
       'PO', 'PI', 'GRC', 'SLD', 'Data Services', 'ADS', 'MII', 'SCM', 'EWM', 'AutoPassReset',
-      'Code Profiler', 'CyberArk', 'Mid Server', 'NWDI', 'Sentinel', 'TREX', 'Terraform',
+      'Code Profiler', 'CyberArk', 'Mid Server', 'NWDI', 'Sentinel', 'TREX', 'Terraform', 'IAC',
       'Zscaler', 'MDG', 'CAS', 'RLP', 'FIM', 'PCM', 'Qlik', 'SLT', 'WTS', 'Focus Run', 'Cproc',
-      'HANA', 'Portal', 'TMS', 'BODS', 'S/4', 'S4HANA'
+      'HANA', 'Portal', 'TMS', 'BODS', 'S/4', 'S4HANA', 'NMC'
     ];
+    const caseSensitiveAcronyms = new Set(['PI', 'PO', 'EP', 'KM']);
     let detectedSystems = [];
-    const fullSearchText = (subject + ' ' + cleanText);
+    const sysSearchText = (cleanSubject + '\n' + (affectedMatch ? affectedMatch[1] : '') + '\n' + bodyNoHeaders);
 
     for (const sys of knownSystems) {
       const escaped = sys.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      let rx;
-      if (sys.length <= 3) {
-        rx = new RegExp(`\\b(?:SAP\\s+)?${escaped}\\b`, 'i');
-      } else {
-        rx = new RegExp(`\\b${escaped}\\b`, 'i');
-      }
-      if (rx.test(fullSearchText)) {
-        detectedSystems.push(sys.replace(/^SAP\s+/i, '').trim());
+      const rxFlags = caseSensitiveAcronyms.has(sys) ? '' : 'i';
+      const rx = sys.length <= 3 ? new RegExp(`\\b(?:SAP\\s+)?${escaped}\\b`, rxFlags) : new RegExp(`\\b${escaped}\\b`, rxFlags);
+      if (rx.test(sysSearchText)) {
+        let cleanSys = sys.replace(/^SAP\s+/i, '').trim();
+        if (cleanSys === 'Networker' || cleanSys === 'NMC') cleanSys = 'NMC Networker';
+        if (!detectedSystems.includes(cleanSys)) detectedSystems.push(cleanSys);
       }
     }
 
     // 5. INFRAESTRUCTURA (Azure, OnPremise, Ambos)
     let infra = '';
-    const textForInfra = (subject + ' ' + cleanText).toLowerCase();
+    const textForInfra = (cleanSubject + ' ' + bodyNoHeaders).toLowerCase();
     if (/\bazure\b/i.test(textForInfra) && (/\bonpremise\b|\bon-premise\b|\bon\s+premise\b/i.test(textForInfra) || /\bambos\b/i.test(textForInfra))) {
       infra = 'Ambos';
     } else if (/\bazure\b/i.test(textForInfra)) {
@@ -30927,147 +31417,156 @@ async function parseEmailFile(file, formType) {
       infra = 'OnPremise';
     }
 
-    // Inferencia de infraestructura según sistema detectado en el catálogo
     if (!infra && detectedSystems.length > 0 && typeof _sistemasData !== 'undefined' && Array.isArray(_sistemasData)) {
       const matchedSysObj = _sistemasData.find(s => {
         const sNom = (s.sistema || s.nombre || '').toLowerCase();
         return detectedSystems.some(ds => sNom === ds.toLowerCase() || sNom.includes(ds.toLowerCase()));
       });
       if (matchedSysObj && matchedSysObj.infraestructura) {
-        const cleanInfra = matchedSysObj.infraestructura.replace(/\s+/g, '');
-        if (cleanInfra.toLowerCase() === 'onpremise') infra = 'OnPremise';
-        else if (cleanInfra.toLowerCase() === 'azure') infra = 'Azure';
-        else if (cleanInfra.toLowerCase() === 'ambos') infra = 'Ambos';
+        const cleanInfra = matchedSysObj.infraestructura.replace(/\s+/g, '').toLowerCase();
+        if (cleanInfra === 'onpremise') infra = 'OnPremise';
+        else if (cleanInfra === 'azure') infra = 'Azure';
+        else if (cleanInfra === 'ambos') infra = 'Ambos';
       }
     }
     if (!infra) infra = 'OnPremise';
 
     // 6. PROMOTOR
     let promotor = '';
-    const promMatch = cleanText.match(/(?:Promotor|Solicitante|Requested\s*by|Applicant|Creator|Created\s*by|Opened\s*by|Submitted\s*by|Contacto)\s*[:=]?\s*([^\r\n<]+)/i);
+    const promMatch = bodyNoHeaders.match(/(?:Promotor|Solicitante|Requested\s*by|Applicant|Creator|Created\s*by|Opened\s*by|Submitted\s*by|Contacto)\s*[:=]?\s*([^\r\n<]+)/i);
     if (promMatch && promMatch[1].trim().length > 2) {
       promotor = promMatch[1].replace(/^["']|["']$/g, '').trim();
     } else if (fromPerson) {
       promotor = fromPerson.replace(/^["']|["']$/g, '').split('<')[0].trim();
     }
 
-    // 7. SID
+    // 7. SID (Estricto para evitar falsos positivos como MADO; incluye inferencia oficial KOF)
+    const sidStopWords = new Set([
+      'RFC','CHG','INC','SOL','REQ','URG','MINOR','MAJOR','NORMAL','EXPEDITED','MADO','UNIX','FEMB',
+      'VULN','MGMT','SAP','HOST','HTTP','HTTPS','HTML','BODY','HEAD','FONT','TIME','ZONE','DATE',
+      'CITY','PLAN','WITH','FROM','MAIL','BOLD','SERV','PROD','CALI','DESA','ESTA','INFO','NONE',
+      'NULL','TRUE','FALSE','DATA','FILE','TEXT','SIZE','LINE','NAME','TYPE','RISK','BACK','END',
+      'OUT','HRS','MIN','IST','CST','PRD','QAS','DEV','PPRD','ALL','SERVER','SERVERS','PATCH',
+      'OFFLINE','ONLINE','SCM','EWM','CRM','GRC','MDG','SLD','MII','ADS','CAS','FIM','PCM',
+      'SLT','WTS','TMS','BTP','ECC','NMC','QA','MX','ON','IN','OR','TO','OF','FOR','THE','AND'
+    ]);
     let sid = '';
-    const bracketSid = (subject + ' ' + cleanText).match(/\[([A-Za-z0-9]{3,6})\]/);
-    if (bracketSid && !['RFC', 'CHG', 'INC', 'SOL', 'REQ', 'URG', 'DEV'].includes(bracketSid[1].toUpperCase())) {
+    const bracketSid = (cleanSubject + ' ' + bodyNoHeaders).match(/\[([A-Za-z0-9]{3,5})\]/);
+    if (bracketSid && !sidStopWords.has(bracketSid[1].toUpperCase())) {
       sid = bracketSid[1].toUpperCase();
     }
     if (!sid) {
-      const sidMatch = cleanText.match(/(?:SID|System\s*ID|Host\s*SAP|Host\s*Unix|Host)\s*[:=-]?\s*([A-Za-z0-9_-]{3,10})/i) ||
-                       cleanText.match(/\b([A-Z0-9]{3}DBPN\d|[A-Z0-9]{3}PRD|[A-Z0-9]{3}QAS|[A-Z0-9]{3}DEV)\b/i) ||
-                       cleanText.match(/Sistema\s+(?:[A-Za-z0-9]+\s+)+(?:PRD|QAS|DEV)\s*-\s*([A-Z0-9]{3,8})/i);
-      if (sidMatch) sid = (sidMatch[1] || sidMatch[0]).toUpperCase();
+      const sidLabelMatch = bodyNoHeaders.match(/(?:^|[\s|;])(?:SID|System\s*ID|Instancia)\s*[:=-]\s*([A-Z0-9]{3}(?:\s*[\/,\-]\s*[A-Z0-9]{3})*)/i) ||
+                            bodyNoHeaders.match(/\b([A-Z0-9]{3}DBPN\d|[A-Z0-9]{3}PRD|[A-Z0-9]{3}QAS|[A-Z0-9]{3}DEV)\b/);
+      if (sidLabelMatch && !sidStopWords.has((sidLabelMatch[1] || sidLabelMatch[0]).toUpperCase())) {
+        sid = (sidLabelMatch[1] || sidLabelMatch[0]).toUpperCase();
+      }
+    }
+    if (!sid && affectedMatch) {
+      const upperTokens = affectedMatch[1].match(/\b[A-Z][A-Z0-9]{2}\b/g) || [];
+      const validSids = upperTokens.filter(t => !sidStopWords.has(t));
+      if (validSids.length > 0) sid = [...new Set(validSids)].join('/');
     }
     if (!sid && detectedSystems.length > 0) {
-      const candidate = detectedSystems.find(s => s.length === 3);
-      if (candidate) sid = candidate.toUpperCase();
+      const hasScm = detectedSystems.includes('SCM');
+      const hasEwm = detectedSystems.includes('EWM');
+      if (hasScm && hasEwm) {
+        sid = ambiente === 'QAS' ? 'SGQ/EGQ' : ambiente === 'PRD' ? 'SMP/EMP' : ambiente === 'PPRD' ? 'SMR/EMR' : ambiente === 'DEV' ? 'SGD/EGD' : 'SGQ/EGQ';
+      } else if (hasScm) {
+        sid = ambiente === 'QAS' ? 'SGQ' : ambiente === 'PRD' ? 'SMP' : ambiente === 'PPRD' ? 'SMR' : 'SGD';
+      } else if (hasEwm) {
+        sid = ambiente === 'QAS' ? 'EGQ' : ambiente === 'PRD' ? 'EMP' : ambiente === 'PPRD' ? 'EMR' : 'EGD';
+      } else if (detectedSystems.includes('NMC Networker')) {
+        sid = 'NMC';
+      }
     }
 
     // 8. STATUS
     let status = 'En espera de VOBO';
-    if (/cancelad[oa]|cancelled/i.test(subject + ' ' + cleanText)) status = 'Cancelado';
-    else if (/aprobado|approved|autorizado/i.test(subject + ' ' + cleanText)) status = 'Aprobado';
-    else if (/ejecuci[oó]n|in\s*progress/i.test(subject + ' ' + cleanText)) status = 'En Ejecución';
+    if (/cancelad[oa]|cancelled/i.test(cleanSubject + ' ' + bodyNoHeaders)) status = 'Cancelado';
+    else if (/(?:\bestatus\b|\bstatus\b)\s*[:=-]\s*(?:aprobado|approved|autorizado)/i.test(bodyNoHeaders)) status = 'Aprobado';
+    else if (/ejecuci[oó]n|in\s*progress/i.test(bodyNoHeaders)) status = 'En Ejecución';
 
-    // 9. FECHAS Y HORAS DE EJECUCIÓN Y CIERRE (Excluyendo cabeceras de correo)
+    // 9. FECHAS Y HORAS DE EJECUCIÓN Y CIERRE (Prioridad Mexico City MX > IST > Etiquetas)
     let inicioObj = null, finObj = null, retObj = null;
 
-    const dtRegex = /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2}|\d{1,2}[\s\-]+(?:de\s+)?[A-Za-z]{3,12}[\s\-]+(?:\d{4})?)(?:\s*(?:a\s+las\s+)?(\d{1,2}:\d{2}(?::\d{2})?(?:\s*(?:am|pm|a\.\s*m\.|p\.\s*m\.|hrs|h))?))?/i;
+    const isBannerOrHeader = (line) => /^(?:Sent|Date|Enviado|Fecha|Received|From|To|De|Para|Cc|CcRecipients|Subject|Asunto|Seguimiento|Comienza el|Vence el)\s*[:=]/i.test(line.trim()) ||
+      /^(?:lun|mar|mi[eé]|jue|vie|s[aá]b|dom)\.?\s+\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}/i.test(line.trim());
+    const executionLines = cleanLines.filter(l => !isBannerOrHeader(l));
+    const execText = executionLines.join('\n');
+
+    const dtPairRx = /(\b\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}\b|\b\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2}\b|\b\d{1,2}[\s\-]+(?:de\s+)?[A-Za-z]{3,12}[\s\-]+\d{4}\b)[\s\r\n,;]*(?:a\s+las\s+)?(\d{1,2}:\d{2}(?::\d{2})?(?:\s*(?:am|pm|a\.\s*m\.|p\.\s*m\.|hrs|h))?)?/gi;
+    const dtRegex = /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2}|\d{1,2}[\s\-]+(?:de\s+)?[A-Za-z]{3,12}[\s\-]+(?:\d{4})?)(?:[\s\r\n]+(?:a\s+las\s+)?(\d{1,2}:\d{2}(?::\d{2})?(?:\s*(?:am|pm|a\.\s*m\.|p\.\s*m\.|hrs|h))?))?/i;
     const timeOnlyRegex = /(\d{1,2}:\d{2}(?::\d{2})?(?:\s*(?:am|pm|a\.\s*m\.|p\.\s*m\.|hrs|h))?)/i;
 
-    const isHeaderLine = (line) => /^(?:Sent|Date|Enviado|Fecha|Received|From|To|De|Para|Cc|Subject|Asunto)\s*[:=]/i.test(line.trim());
-    const executionLines = cleanLines.filter(l => !isHeaderLine(l));
+    // Prioridad A: Bloque explícito Time zone in Mexico City (MX) — nunca se convierte como IST
+    const mxSectionMatch = execText.match(/(?:Time\s*zone\s*in\s*Mexico\s*City|\(\s*MX\s*\)|Mexico\s*City\s*\(?MX\)?|Hora(?:rio)?\s*(?:de\s*)?(?:M[eé]xico|CDMX))([\s\S]{0,600})/i);
+    if (mxSectionMatch) {
+      const mxBlock = mxSectionMatch[1].split(/(?:Affected\s+instances|Number\s+and\s+description|Time\s*zone\s*in\s*India)/i)[0];
+      const mxMatches = [...mxBlock.matchAll(dtPairRx)].map(m => normalizeDateStr(m[1], m[2] || '', false)).filter(Boolean);
+      if (mxMatches.length >= 1) inicioObj = mxMatches[0];
+      if (mxMatches.length >= 2) finObj = mxMatches[1];
+      if (mxMatches.length >= 3) retObj = mxMatches[2];
+    }
 
-    let startLine = executionLines.find(l => /(?:fecha(?:\s+y\s+hora)?(?:\s+de)?\s*(?:ejecuci[oó]n|inicio|implementaci[oó]n|actividad)|inicio\s*programado|start\s*(?:date|time)?|scheduled\s*start|planned\s*start)/i.test(l)) || '';
-    let startHourLine = executionLines.find(l => /(?:hora(?:\s+de)?\s*(?:ejecuci[oó]n|inicio)|start\s*time|horario(?:\s+de\s+inicio)?)/i.test(l)) || '';
-
-    let endLine = executionLines.find(l => /(?:fecha(?:\s+y\s+hora)?(?:\s+de)?\s*(?:cierre|fin|conclusi[oó]n|t[eé]rmino)|fin\s*programado|end\s*(?:date|time)?|scheduled\s*end|planned\s*end)/i.test(l)) || '';
-    let endHourLine = executionLines.find(l => /(?:hora(?:\s+de)?\s*(?:cierre|fin|t[eé]rmino)|end\s*time|horario(?:\s+de\s+fin)?)/i.test(l)) || '';
-
-    let retLine = executionLines.find(l => /(?:fecha(?:\s+y\s+hora)?(?:\s+de)?\s*(?:retorno|rollback|contingencia)|retorno|rollback|plan\s+de\s+retorno)/i.test(l)) || '';
-
-    if (startLine) {
-      const m = startLine.match(dtRegex);
-      if (m) {
-        let t = m[2] || '';
-        if (!t && startHourLine) {
-          const tm = startHourLine.match(timeOnlyRegex);
-          if (tm) t = tm[1];
-        }
-        inicioObj = normalizeDateStr(m[1], t, isExplicitIST);
+    // Prioridad B: Bloque explícito Time zone in India Time (IST) (solo si no hubo bloque MX)
+    if (!inicioObj) {
+      const istSectionMatch = execText.match(/(?:Time\s*zone\s*in\s*India\s*Time|India\s*Standard\s*Time|\(\s*IST\s*\))([\s\S]{0,600})/i);
+      if (istSectionMatch) {
+        const istBlock = istSectionMatch[1].split(/(?:Time\s*zone\s*in\s*Mexico|Affected\s+instances)/i)[0];
+        const istMatches = [...istBlock.matchAll(dtPairRx)].map(m => normalizeDateStr(m[1], m[2] || '', true)).filter(Boolean);
+        if (istMatches.length >= 1) inicioObj = istMatches[0];
+        if (istMatches.length >= 2) finObj = istMatches[1];
+        if (istMatches.length >= 3) retObj = istMatches[2];
       }
     }
 
-    if (endLine) {
-      const m = endLine.match(dtRegex);
-      if (m) {
-        let t = m[2] || '';
-        if (!t && endHourLine) {
-          const tm = endHourLine.match(timeOnlyRegex);
-          if (tm) t = tm[1];
-        }
-        finObj = normalizeDateStr(m[1], t, isExplicitIST);
-      }
-    }
-
-    if (retLine) {
-      const m = retLine.match(dtRegex);
-      if (m) retObj = normalizeDateStr(m[1], m[2] || '', isExplicitIST);
-    }
-
-    // Fallback de fechas en el cuerpo excluyendo headers de correo
+    // Prioridad C: Etiquetas individuales (soportando filas de tabla HTML donde el valor está en la línea siguiente)
+    const isExplicitIST = /\b(?:IST|India\s*Standard\s*Time)\b/i.test(execText) && !mxSectionMatch;
     if (!inicioObj || !finObj) {
-      const bodyWithoutHeaders = executionLines.join('\n');
-      const globalDtRegex = /(\b\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}\b|\b\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2}\b|\b\d{1,2}[\s\-]+(?:de\s+)?[A-Za-z]{3,12}[\s\-]+\d{4}\b)(?:\s*(?:a\s+las\s+)?(\d{1,2}:\d{2}(?::\d{2})?(?:\s*(?:am|pm|a\.\s*m\.|p\.\s*m\.|hrs|h))?))?/gi;
-      let match;
-      const candidates = [];
-      while ((match = globalDtRegex.exec(bodyWithoutHeaders)) !== null) {
-        const parsed = normalizeDateStr(match[1], match[2] || '', isExplicitIST);
-        if (parsed && parsed.date) candidates.push(parsed);
-      }
+      const findLabeledDate = (rx) => {
+        const idx = executionLines.findIndex(l => rx.test(l));
+        if (idx === -1) return null;
+        const combined = executionLines[idx] + ' ' + (executionLines[idx + 1] || '');
+        const m = combined.match(dtRegex);
+        return m ? normalizeDateStr(m[1], m[2] || '', isExplicitIST) : null;
+      };
+      if (!inicioObj) inicioObj = findLabeledDate(/(?:fecha(?:\s+y\s+hora)?(?:\s+de)?\s*(?:ejecuci[oó]n|inicio|implementaci[oó]n|actividad)|inicio\s*programado|start\s*date|scheduled\s*start|planned\s*start|beginning)/i);
+      if (!finObj) finObj = findLabeledDate(/(?:fecha(?:\s+y\s+hora)?(?:\s+de)?\s*(?:cierre|fin|conclusi[oó]n|t[eé]rmino)|fin\s*programado|end\s*without\s*return|end\s*date|scheduled\s*end|planned\s*end)/i);
+      if (!retObj) retObj = findLabeledDate(/(?:fecha(?:\s+y\s+hora)?(?:\s+de)?\s*(?:retorno|rollback|contingencia)|end\s*with\s*(?:backout\s*plan|return)|plan\s+de\s+retorno)/i);
+    }
+
+    // Prioridad D: Fallback general sobre fechas en el cuerpo (excluyendo banners y headers de correo)
+    if (!inicioObj || !finObj) {
+      const candidates = [...execText.matchAll(dtPairRx)].map(m => normalizeDateStr(m[1], m[2] || '', isExplicitIST)).filter(Boolean);
       if (!inicioObj && candidates.length >= 1) inicioObj = candidates[0];
       if (!finObj && candidates.length >= 2) finObj = candidates[1];
       if (!retObj && candidates.length >= 3) retObj = candidates[2];
     }
 
-    // 10. COORDINADORES KOF (Sin Guadalupe Arguelles)
+    // 10. COORDINADORES KOF (Soporta 'Nombre Apellido', 'Apellido, Nombre' y destinatarios CC de .msg)
     const knownCoordinators = [
       'Gerardo Arteaga', 'Mario Reyes', 'Ulises Gutiérrez',
       'Daniel Ponce', 'Germán Bravo', 'Viridiana Cortizo', 'Talía Rosas', 'Rolando Sánchez',
       'Juan Carlos Armas Castañeda', 'Mauro Lopez Rivas', 'Aline Itzel Hernandez Resendiz', 'Claudio Sanchez Aguilar',
       'Eduardo Pérez Alemán'
     ];
-    let detectedCoordinators = [];
-    const textSimple = fullSearchText.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const coordSearchText = (cleanSubject + '\n' + toPerson + '\n' + ccPerson + '\n' + bodyNoHeaders)
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+    const explicitEmailCoordinators = [];
     for (const coord of knownCoordinators) {
-      const coordSimple = coord.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-      if (textSimple.includes(coordSimple)) {
-        detectedCoordinators.push(coord);
+      const cNorm = coord.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      const parts = cNorm.split(/\s+/).filter(Boolean);
+      const first = parts[0];
+      const last = parts[1];
+      let matched = coordSearchText.includes(cNorm);
+      if (!matched && first && last) {
+        const revRx = new RegExp(`\\b${last}(?:[_,\\s]+\\w{1,5})?[,\\s]+${first}\\b`, 'i');
+        const dotRx = new RegExp(`\\b${first}[._]${last}\\b`, 'i');
+        if (revRx.test(coordSearchText) || dotRx.test(coordSearchText)) matched = true;
       }
-    }
-    // Mapeo automático de Coordinador KOF según matriz oficial
-    if (detectedCoordinators.length === 0 && detectedSystems.length > 0) {
-      detectedSystems.forEach(ds => {
-        const clean = String(ds).toLowerCase().replace(/^sap\s+/i, '').trim();
-        if (typeof SISTEMA_COORDINADOR_MAP !== 'undefined') {
-          if (SISTEMA_COORDINADOR_MAP[clean]) {
-            detectedCoordinators.push(SISTEMA_COORDINADOR_MAP[clean]);
-          } else {
-            for (const key of Object.keys(SISTEMA_COORDINADOR_MAP)) {
-              if (clean.includes(key) || key.includes(clean)) {
-                detectedCoordinators.push(SISTEMA_COORDINADOR_MAP[key]);
-                break;
-              }
-            }
-          }
-        }
-      });
-      detectedCoordinators = [...new Set(detectedCoordinators)];
+      if (matched) explicitEmailCoordinators.push(coord);
     }
 
     let detectedSystem = detectedSystems.length > 0 ? detectedSystems[0] : (sid || 'General');
@@ -31126,11 +31625,10 @@ async function parseEmailFile(file, formType) {
       if (document.getElementById('f-status') && status) document.getElementById('f-status').value = status;
       if (document.getElementById('f-descripcion') && descripcion) document.getElementById('f-descripcion').value = descripcion;
 
-      // 2. Vinculación Completa de Sistemas SAP Detectados (Sin mutilar al primero)
+      // 2. Vinculación Completa de Sistemas SAP Detectados
       const rfcSisContainer = document.getElementById('rfc-sistemas-container');
       const allDetected = detectedSystems.length > 0 ? detectedSystems : (detectedSystem ? [detectedSystem] : []);
 
-      // Desmarcar selecciones previas
       const sysCbs = document.querySelectorAll('#rfc-sistemas-container input[name="rfc-sistema-cb"], input.sistema-checkbox-item, .sistemas-checkbox-item');
       sysCbs.forEach(cb => { cb.checked = false; });
 
@@ -31148,7 +31646,6 @@ async function parseEmailFile(file, formType) {
         }
       });
 
-      // Asegurar que f-grupo tenga el sistema principal y no se reinicie
       const primarySys = allDetected[0] || detectedSystem || 'SAP General';
       const grupoSel = document.getElementById('f-grupo');
       if (grupoSel) {
@@ -31165,15 +31662,14 @@ async function parseEmailFile(file, formType) {
       if (typeof updateRfcGrupoFromSistemas === 'function') updateRfcGrupoFromSistemas();
       if (typeof updateSistemasSelectLabel === 'function') updateSistemasSelectLabel();
 
-      // Sincronizar Coordinadores KOF
-      const kofCbs = document.querySelectorAll('#kof-checkboxes-container input.kof-checkbox-item, input.kof-checkbox-item');
-      kofCbs.forEach(cb => { cb.checked = false; });
-      if (detectedCoordinators.length > 0) {
+      // Si el correo nombra explícitamente al Coordinador (ej. Mario Reyes), prevalece sobre el mapeo genérico
+      if (explicitEmailCoordinators.length > 0) {
+        const kofCbs = document.querySelectorAll('#kof-checkboxes-container input.kof-checkbox-item, input.kof-checkbox-item');
         kofCbs.forEach(cb => {
-          if (detectedCoordinators.includes(cb.value)) cb.checked = true;
+          cb.checked = explicitEmailCoordinators.includes(cb.value);
         });
+        if (typeof updateKofSelectLabel === 'function') updateKofSelectLabel();
       }
-      if (typeof updateKofSelectLabel === 'function') updateKofSelectLabel();
 
       // 3. Dropzone UI reactiva a modo Edición vs Creación
       const isUpdate = !!existingRfc;
@@ -31184,9 +31680,9 @@ async function parseEmailFile(file, formType) {
         dropzoneEl.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:12px; flex-wrap:wrap;">
             <div style="text-align:left;">
-              <span style="color:${isUpdate ? '#0090cc' : '#059669'}; font-weight:700; font-size:12.5px;">✓ Datos extraídos de ${escapeHtml(file.name || 'correo')}${isUpdate ? ' (Ticket Existente)' : ''}:</span>
+              <span style="color:${isUpdate ? '#0090cc' : '#059669'}; font-weight:700; font-size:12.5px;">Datos extraídos de ${escapeHtml(file.name || 'correo')}${isUpdate ? ' (Ticket Existente)' : ''}:</span>
               <div style="font-size:11.5px; color:var(--text); margin-top:2px;">
-                Ticket: <strong style="color:var(--accent2);">${ticket || 'Sin ticket'}</strong> | Tipo: <strong>${tipo}</strong> | Sistemas: <strong>${allDetected.join(', ')}</strong> | Ambiente: <strong>${ambiente}</strong> | Inicio: <strong>${inicioObj ? inicioObj.date + ' ' + inicioObj.hour + ':' + inicioObj.min : 'Hoy'}</strong>
+                Ticket: <strong style="color:var(--accent2);">${ticket || 'Sin ticket'}</strong> | Tipo: <strong>${tipo}</strong> | Sistemas: <strong>${allDetected.join(', ')}</strong> | Ambiente: <strong>${ambiente}</strong> | SID: <strong>${sid || 'N/A'}</strong> | Inicio: <strong>${inicioObj ? inicioObj.date + ' ' + inicioObj.hour + ':' + inicioObj.min : 'Pendiente'}</strong>
               </div>
             </div>
             <div style="display:flex; gap:6px;">
@@ -31208,6 +31704,14 @@ async function parseEmailFile(file, formType) {
       if (document.getElementById('sol-responsable') && promotor) document.getElementById('sol-responsable').value = promotor;
       if (document.getElementById('sol-titulo') && descripcion) document.getElementById('sol-titulo').value = descripcion.substring(0, 100);
       if (document.getElementById('sol-descripcion') && descripcion) document.getElementById('sol-descripcion').value = descripcion;
+      if (detectedSystems.length > 0 && typeof autoSelectKofCoordinatorsForSistemas === 'function') {
+        autoSelectKofCoordinatorsForSistemas(detectedSystems, 'solicitud');
+      }
+      if (explicitEmailCoordinators.length > 0) {
+        document.querySelectorAll('#sol-kof-checkboxes-container input.sol-kof-checkbox-item, input.sol-kof-checkbox-item')
+          .forEach(cb => { cb.checked = explicitEmailCoordinators.includes(cb.value); });
+        if (typeof syncSolKofSelectFromCheckboxes === 'function') syncSolKofSelectFromCheckboxes();
+      }
 
       if (typeof showToast === 'function') showToast('Solicitud autocompletada desde correo', 'success');
     }

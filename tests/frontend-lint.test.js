@@ -59,3 +59,15 @@ test('3. styles.css Integrity', () => {
   assert.ok(css.length > 1000, 'styles.css must not be empty');
   assert.ok(css.includes(':root'), 'styles.css must contain CSS custom properties :root');
 });
+
+test('4. Date Range and Direct CSV Export Controls in page-sheet', () => {
+  const htmlPath = findFile('index.html');
+  assert.ok(htmlPath, 'index.html must exist');
+  const html = fs.readFileSync(htmlPath, 'utf8');
+
+  assert.ok(html.includes('id="sheet-date-from"'), 'Must contain input for fecha desde in page-sheet');
+  assert.ok(html.includes('id="sheet-date-to"'), 'Must contain input for fecha hasta in page-sheet');
+  assert.ok(html.includes('clearSheetDateFilter()'), 'Must contain clearSheetDateFilter handler');
+  assert.ok(html.includes('exportCSVSheet()'), 'Must contain exportCSVSheet handler');
+  assert.ok(html.includes('\\uFEFF'), 'Must include UTF-8 BOM in CSV export blob');
+});
