@@ -706,7 +706,7 @@ padding:18px 20px;position:relative;overflow:hidden;transition:all 0.18s;box-sha
 
 .search-box input::placeholder{color:var(--text3)}
 
-.search-box::before{content:'âŒ•';position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text3);pointer-events:none}
+.search-box::before{content:'\2315';position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text3);pointer-events:none}
 
 .filter-select{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 11px;color:var(--text2);font-family:var(--font);font-size:12.5px;font-weight:500;outline:none;cursor:pointer;transition:border-color 0.15s}
 
@@ -8319,7 +8319,7 @@ stroke-linecap="round" stroke-linejoin="round">
 
 <div class="sidebar-sys-search-wrap">
 
-<input type="text" id="sidebar-sys-search" class="sidebar-sys-search-input" placeholder="🔍 Filtrar sistemas..." oninput="filterSidebarSistemas('sap')">
+<input type="text" id="sidebar-sys-search" class="sidebar-sys-search-input" placeholder="Filtrar sistemas..." oninput="filterSidebarSistemas('sap')">
 
 </div>
 
@@ -8351,7 +8351,7 @@ stroke-linecap="round" stroke-linejoin="round">
 
 <div class="sidebar-sys-search-wrap">
 
-<input type="text" id="sidebar-sys-nosap-search" class="sidebar-sys-search-input" placeholder="🔍 Filtrar No SAP..." oninput="filterSidebarSistemas('nosap')">
+<input type="text" id="sidebar-sys-nosap-search" class="sidebar-sys-search-input" placeholder="Filtrar No SAP..." oninput="filterSidebarSistemas('nosap')">
 
 </div>
 
@@ -8958,7 +8958,7 @@ onclick="exportFilteredCSV()" title="Exportar registros filtrados a CSV">📥 Ex
 
               <div class="flex-row flex-gap-6 align-center">
 
-                <input type="text" id="sistemas-search-input" class="form-control-sm" placeholder="🔍 Buscar sistema..." oninput="renderSistemasPage()" style="width:180px;font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);" />
+                <input type="text" id="sistemas-search-input" class="form-control-sm" placeholder="Buscar sistema..." oninput="renderSistemasPage()" style="width:180px;font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);" />
 
               </div>
 
@@ -9415,7 +9415,7 @@ autocompletará todos los campos del formulario.</div>
       </div>
       <div class="multiselect-dropdown-menu" id="sistemas-dropdown-menu" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:999999; background:var(--surface2,#ffffff); border:1px solid var(--border,#cbd5e1); border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.15); max-height:260px; overflow-y:auto; padding:10px; margin-top:4px;" onclick="event.stopPropagation()">
         <div style="display:flex; gap:8px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border);">
-          <input type="text" id="sistemas-dropdown-search" placeholder="🔍 Buscar sistema..." class="form-control-sm" style="width:100%; font-size:12px;" oninput="filterMultiSelectSistemas(this.value)">
+          <input type="text" id="sistemas-dropdown-search" placeholder="Buscar sistema..." class="form-control-sm" style="width:100%; font-size:12px;" oninput="filterMultiSelectSistemas(this.value)">
         </div>
         <div id="rfc-sistemas-container" class="sistemas-checkbox-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:6px;">
           <span class="text-sm text-muted">Cargando sistemas...</span>
@@ -9474,11 +9474,10 @@ autocompletará todos los campos del formulario.</div>
   </div>
 
   <div class="form-group" style="grid-column: span 6; width: 100%;">
-    <label class="form-label" style="font-weight: 600; color: var(--accent2, #0f2b5c);">📥 Autocompletar RFC desde correo (.eml / .msg)</label>
+    <label class="form-label" style="font-weight: 600; color: var(--accent2, #0f2b5c);">Autocompletar RFC desde correo (.eml / .msg)</label>
     <div class="email-drag-dropzone" id="rfc-email-dropzone" style="width: 100% !important; box-sizing: border-box !important; min-height: 38px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; border: 1px dashed var(--accent, #00befe); border-radius: 6px; background: rgba(0,190,254,0.05);" ondragover="event.preventDefault(); this.classList.add('dragover');" ondragleave="this.classList.remove('dragover');" ondrop="handleEmailDrop(event, 'rfc')">
       <div style="display:flex; align-items:center; gap:8px;">
-        <span class="dropzone-icon">📧</span>
-        <span class="dropzone-text" style="color: var(--text, #0f2b5c) !important; font-size: 12px; font-weight: 600;">Arrastra correo (.eml/.msg) aquí</span>
+        <span class="dropzone-text" style="color: var(--text, #0f2b5c) !important; font-size: 12px; font-weight: 600;">Arrastrar correo (.eml / .msg) aqui</span>
       </div>
       <input type="file" id="rfc-email-file" accept=".eml,.msg" style="display:none;" onchange="handleEmailFileSelect(event, 'rfc')">
       <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('rfc-email-file').click()" style="padding: 2px 8px; font-size: 11px;">Examinar</button>
@@ -9513,9 +9512,9 @@ autocompletará todos los campos del formulario.</div>
 
 <div class="flex-row flex-gap-8">
 
-<button id="btn-sheet-tqs-toggle" class="btn btn-secondary btn-sm" onclick="toggleSheetTqsFilter()" style="display:none;" title="Alternar entre mis RFCs y todos los RFCs de Operaciones">👤 Mis RFCs (TQS)</button>
+<button id="btn-sheet-tqs-toggle" class="btn btn-secondary btn-sm" onclick="toggleSheetTqsFilter()" style="display:none;" title="Alternar entre mis RFCs y todos los RFCs de Operaciones">Mis RFCs (TQS)</button>
 
-<button class="btn btn-warning btn-sm" onclick="showReprogramarModal()" aria-label="Reprogramar RFC">📅 Reprogramar RFC</button>
+<button class="btn btn-warning btn-sm" onclick="showReprogramarModal()" aria-label="Reprogramar RFC">Reprogramar RFC</button>
 
 <button class="btn btn-secondary btn-sm" onclick="exportCSVSheet()" title="Descargar registros filtrados en archivo CSV">Descargar CSV</button>
 
@@ -9527,16 +9526,12 @@ autocompletará todos los campos del formulario.</div>
 
 <div class="filters-bar">
 
-<div class="search-box"><input type="text" placeholder="Buscar por RFC, sistema, promotor, TQS..."
-
-id="sheet-search" oninput="debouncedApplyFilters()"></div>
-
 <div class="date-range-group" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2,#ffffff);border:1px solid var(--border);border-radius:8px;padding:2px 8px;" title="Filtrar por rango de fechas">
   <span style="font-size:11px;font-weight:600;color:var(--text-muted);">Desde:</span>
   <input type="date" id="sheet-date-from" class="filter-select-date" onchange="applyFilters()" title="Fecha Desde" aria-label="Fecha Desde" style="border:none;background:transparent;color:var(--text);font-family:var(--font);font-size:12px;cursor:pointer;">
   <span style="font-size:11px;font-weight:600;color:var(--text-muted);">Hasta:</span>
   <input type="date" id="sheet-date-to" class="filter-select-date" onchange="applyFilters()" title="Fecha Hasta" aria-label="Fecha Hasta" style="border:none;background:transparent;color:var(--text);font-family:var(--font);font-size:12px;cursor:pointer;">
-  <button type="button" class="btn-ghost-icon" onclick="clearSheetDateFilter()" title="Limpiar rango de fechas" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:13px;padding:0 2px;">&times;</button>
+  <button type="button" class="btn-ghost-icon" onclick="clearSheetDateFilter()" title="Limpiar rango de fechas" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:13px;padding:0 2px;">x</button>
 </div>
 
 <select class="filter-select" id="filter-status" onchange="applyFilters()" title="Filtrar por Status"
@@ -9679,7 +9674,7 @@ aria-label="Limpiar todos los filtros de columna">&times; Limpiar filtros</butto
         <span style="font-size:10px; color:#64748b; margin-left:6px;">▼</span>
       </div>
       <div class="multiselect-dropdown-menu" id="sol-sistemas-dropdown-menu" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:99999; background:#fff; border:1px solid #cbd5e1; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.15); padding:10px; margin-top:4px;">
-        <input type="text" id="sol-sistemas-dropdown-search" placeholder="🔍 Buscar sistema..." class="form-input" onkeyup="filterMultiSelectSolSistemas(this.value)" style="margin-bottom:8px; width:100%; font-size:12px; padding:6px 10px;">
+        <input type="text" id="sol-sistemas-dropdown-search" placeholder="Buscar sistema..." class="form-input" onkeyup="filterMultiSelectSolSistemas(this.value)" style="margin-bottom:8px; width:100%; font-size:12px; padding:6px 10px;">
         <div id="sol-sistemas-list" class="sistemas-checkbox-grid" style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">
           <!-- Populated by solCargarTQSSelect() -->
         </div>
@@ -9754,7 +9749,7 @@ aria-label="Limpiar todos los filtros de columna">&times; Limpiar filtros</butto
         <span style="font-size:10px; color:#64748b;">▼</span>
       </div>
       <div class="multiselect-dropdown-menu" id="sol-tqs-dropdown-menu" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:99999; background:#fff; border:1px solid #cbd5e1; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.15); max-height:240px; overflow-y:auto; padding:8px; margin-top:4px;" onclick="event.stopPropagation()">
-        <input type="text" id="sol-tqs-dropdown-search" placeholder="🔍 Buscar TQS..." class="form-input" onkeyup="filterMultiSelectSolTqs(this.value)" style="margin-bottom:8px; width:100%; font-size:12px; padding:6px 10px;">
+        <input type="text" id="sol-tqs-dropdown-search" placeholder="Buscar TQS..." class="form-input" onkeyup="filterMultiSelectSolTqs(this.value)" style="margin-bottom:8px; width:100%; font-size:12px; padding:6px 10px;">
         <div id="sol-tqs-list" style="display:flex; flex-direction:column; gap:6px;">
           <!-- Populated by solCargarTQSSelect() -->
         </div>
@@ -14332,11 +14327,11 @@ if (isGeneral && isTqsUser) {
     const filterByTqs = (window._sheetTqsOnly === true) || (window._sheetTqsOnly !== false && window.isDashboardTqsActive);
     if (filterByTqs) {
       btnSheetTqs.className = 'btn btn-primary btn-sm';
-      btnSheetTqs.innerHTML = '✓ Mis RFCs (TQS Activo)';
+      btnSheetTqs.innerHTML = 'Mis RFCs (TQS Activo)';
       if (pTitle) pTitle.innerHTML = 'General (Mis RFCs) <span class="tag" id="sheet-tag">...</span>';
     } else {
       btnSheetTqs.className = 'btn btn-secondary btn-sm';
-      btnSheetTqs.innerHTML = '👤 Ver Solo Mis RFCs';
+      btnSheetTqs.innerHTML = 'Ver Solo Mis RFCs';
       if (pTitle) pTitle.innerHTML = 'General (Operación Completa) <span class="tag" id="sheet-tag">...</span>';
     }
   } else if (pTitle) {
@@ -17824,7 +17819,7 @@ activeDropdownCol = colKey;
 
 const baseData = getSheet(currentSheet);
 
-const globalSearch = document.getElementById('sheet-search').value.toLowerCase();
+const globalSearch = (document.getElementById('sheet-search')?.value || '').toLowerCase();
 
 const globalStatus = document.getElementById('filter-status').value.toLowerCase();
 
@@ -18140,11 +18135,11 @@ clearBtn.style.display = (activeFilters.length > 0 || hasDateFilter) ? '' : 'non
 
 let dateChipHtml = '';
 if (dFrom && dTo) {
-  dateChipHtml = `<div class="chip"><span style="color:var(--text3)">Periodo:</span> ${escapeHtml(dFrom)} al ${escapeHtml(dTo)} <span class="chip-x" onclick="clearSheetDateFilter()">&times;</span></div>`;
+  dateChipHtml = `<div class="chip"><span style="color:var(--text3)">Periodo:</span> ${escapeHtml(dFrom)} al ${escapeHtml(dTo)} <span class="chip-x" onclick="clearSheetDateFilter()">x</span></div>`;
 } else if (dFrom) {
-  dateChipHtml = `<div class="chip"><span style="color:var(--text3)">Desde:</span> ${escapeHtml(dFrom)} <span class="chip-x" onclick="clearSheetDateFilter()">&times;</span></div>`;
+  dateChipHtml = `<div class="chip"><span style="color:var(--text3)">Desde:</span> ${escapeHtml(dFrom)} <span class="chip-x" onclick="clearSheetDateFilter()">x</span></div>`;
 } else if (dTo) {
-  dateChipHtml = `<div class="chip"><span style="color:var(--text3)">Hasta:</span> ${escapeHtml(dTo)} <span class="chip-x" onclick="clearSheetDateFilter()">&times;</span></div>`;
+  dateChipHtml = `<div class="chip"><span style="color:var(--text3)">Hasta:</span> ${escapeHtml(dTo)} <span class="chip-x" onclick="clearSheetDateFilter()">x</span></div>`;
 }
 
 chips.innerHTML = dateChipHtml + activeFilters.map(([key, vals]) => {
