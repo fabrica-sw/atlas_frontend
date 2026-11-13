@@ -120,3 +120,4 @@ ssh root@10.10.10.102 "docker logs --tail 50 atlas_nginx"
 | Advertencia de certificado SSL en cliente | CA raiz de EAS no instalada en el equipo cliente | Descargar e instalar `/eas_root_ca.crt` expuesto por `nginx.conf` |
 | Fallo al actualizar `index.html` con `docker cp` | El archivo tiene un bind mount `:ro` en `docker-compose.yml` | Sobrescribir directamente `/home/eas101/atlas-app/index.html` via `scp` |
 | Error `404` al recargar ruta SPA | Falta directiva `try_files` en Nginx | Confirmar `try_files $uri $uri/ /index.html;` en `nginx.conf` |
+
